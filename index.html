@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
+    <style type="text/css">
+        html { height: 100% }
+        body { height: 100%; margin: 0; padding: 0 }
+        #map-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 100%;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        #map-options {
+            position: absolute;
+            left: 5px;
+            bottom: 5px;
+            z-index: 1;
+            background-color: white;
+            box-shadow: 0 0 10px #333;
+            border: 1px solid black;
+            padding: 3px;
+        }
+        #map-options label {
+            display: block;
+        }
+
+        .place-name {
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        .place-rating {
+            font-size: 14px;
+            float: right;
+        }
+
+        .place-rating:after {
+            content: " stars"
+        }
+
+        .reviews {
+            font-size: 12px;
+            max-height: 200px;
+            width: 400px;
+            overflow: auto;
+        }
+
+        .review-author {
+            font-weight: bold;
+        }
+        .review-text {
+            margin-bottom: 5px;
+            padding-left: 19px;
+        }
+    </style>
+    <script type="text/javascript" src="https://maps.googleapis.com/maps/api/js?libraries=places&sensor=false"></script>
+    <script type="text/javascript" src="http://google-maps-utility-library-v3.googlecode.com/svn/trunk/routeboxer/src/RouteBoxer.js"></script>
+
+    <script type="text/javascript">
+        var updatePlacesTimer = null;
+        var markers = [];
+        var map, route, places, boxer, options, info;
+        var routes = [
+            'http://www.mapmyfitness.com/ws/4p/routes/get_route_kml?consumer_key=b513571b80685c74fa95b7755d916c24048889df4&route_id=164069952&display_distance_marker_flag=1&display_custom_marker_flag=1&last_updated=3',
+            'http://www.mapmyfitness.com/ws/4p/routes/get_route_kml?consumer_key=b513571b80685c74fa95b7755d916c24048889df4&route_id=164084512&display_distance_marker_flag=1&display_custom_marker_flag=1&last_updated=3',
+            'http://www.mapmyfitness.com/ws/4p/routes/get_route_kml?consumer_key=b513571b80685c74fa95b7755d916c24048889df4&route_id=164324534&display_distance_marker_flag=1&display_custom_marker_flag=1&last_updated=3',
+            'http://www.mapmyfitness.com/ws/4p/routes/get_route_kml?consumer_key=b513571b80685c74fa95b7755d916c24048889df4&route_id=164617460&display_distance_marker_flag=1&display_custom_marker_flag=1&last_updated=3',
+            'http://www.mapmyfitness.com/ws/4p/routes/get_route_kml?consumer_key=b513571b80685c74fa95b7755d916c24048889df4&route_id=164898328&display_distance_marker_flag=1&display_custom_marker_flag=1&last_updated=3',
+            'http://www.mapmyfitness.com/ws/4p/routes/get_route_kml?consumer_key=b513571b80685c74fa95b7755d916c24048889df4&route_id=164904060&display_distance_marker_flag=1&display_custom_marker_flag=1&last_updated=3'
+        ];
+
+        function initialize() {
+            map = new google.maps.Map(document.getElementById("map-canvas"), {
+                mapTypeId: google.maps.MapTypeId.ROADMAP
+            });
+            google.maps.event.addListener(map, "bounds_changed", updatePlaces);
+
+            places = new google.maps.places.PlacesService(map);
+            setRoute(0);
+
+            options = document.getElementById('map-options');
+            options.addEventListener('click', onOptionsClick, false);
+            info = new google.maps.InfoWindow({});
+        }
+
+        function onOptionsClick(e) {
+            if (e.target.tagName == 'INPUT') {
+                updatePlaces();
+            }
+        }
+
+        function setRoute(routeIndex) {
+
+            if (!route) {
+                route = new google.maps.KmlLayer({ map: map });
+            }
+
+            var url = routes[routeIndex];
+            route.setUrl(url)
+        }
+
+
+        function updatePlaces() {
+            if (updatePlacesTimer) {
+                clearTimeout(updatePlacesTimer);
+            }
+
+            updatePlacesTimer = setTimeout(function() {
+                var bounds = map.getBounds();
+
+                var slice = Array.prototype.slice;
+                var inputs = slice.call(options.getElementsByTagName('input'), 0);
+                clearMarkers();
+                inputs.forEach(function(input) {
+                    if (input.type == 'checkbox' && input.checked) {
+                        var search = {
+                            bounds: bounds,
+                            types: [input.name]
+                        };
+
+                        places.nearbySearch(search, function(results, status, pagination) {
+                            if (status == google.maps.places.PlacesServiceStatus.OK) {
+                                for (var i = 0; i < results.length; i++) {
+                                    createMarker(input.getAttribute('color'), results[i]);
+                                }
+                            }
+                        });
+                    }
+                });
+
+
+            }, 500);
+        }
+
+        function clearMarkers() {
+            markers.forEach(function(marker) {
+                marker.setMap(null);
+            });
+            markers = [];
+        }
+
+        function createMarker(color, place) {
+            if (!markerExists(place)) {
+                var symbol = {
+                    path: google.maps.SymbolPath.CIRCLE,
+                    fillColor: color,
+                    fillOpacity:.5,
+                    strokeColor: color,
+                    strokeWeight: 1,
+                    scale: 5
+                };
+
+                var marker = new google.maps.Marker({
+                    position: place.geometry.location,
+                    flat: true,
+                    icon: symbol,
+                    place: place,
+                    title: place.name + ' ' + place.rating
+                });
+                google.maps.event.addListener(marker, 'click', showInfo.bind(this, marker));
+                marker.setMap(map);
+                markers.push(marker);
+            }
+        }
+
+        function markerExists(place) {
+            var id = place.id;
+            return markers.some(function(marker) {
+                return marker.place.id == id;
+            });
+        }
+
+        function showInfo(marker) {
+            var place = marker.place;
+
+            places.getDetails(place, function(placeDetails, status) {
+                if (status == 'OK') {
+                    var content = ((placeDetails.rating == undefined ? '' : '<span class="place-rating">{rating}</span>') +
+                            '<a class="place-name" target="_blank" href="{url}">{name}</a>' +
+                            '<div class="reviews">').format(placeDetails);
+                    if (placeDetails.reviews) {
+                        placeDetails.reviews.forEach(function(review) {
+                            if (review.text) {
+                                content += ('<div class="review-author">{author_name}</div>' +
+                                    '<div class="review-text">{text}</div>').format(review);
+                            }
+                        });
+                    }
+                    info.setContent(content + '</div>');
+                    info.setPosition(marker.getPosition());
+                    info.open(map);
+                }
+            });
+        }
+
+
+        google.maps.event.addDomListener(window, 'load', initialize);
+
+        String.prototype.format = function(data) {
+            return this.replace(/{(.+?)}/g, function(match, name) {
+                return data[name] || match;
+            });
+        }
+    </script>
+</head>
+<body>
+<div id="map-options">
+    <label>Day:
+        <select name="day" onchange="setRoute(this.selectedIndex);">
+            <option>1. Sunday</option>
+            <option>2. Monday</option>
+            <option>3. Tuesday</option>
+            <option>4. Wednesday</option>
+            <option>5. Thursday</option>
+            <option>6. Friday</option>
+        </select>
+    </label>
+    <label style="color: #006;"><input type="checkbox" color="#000066" name="restaurant" checked />Restaurants</label>
+    <label style="color: purple;"><input type="checkbox" color="purple" name="cafe" checked />Cafes</label>
+    <label style="color: #060;"><input type="checkbox" color="#006600" name="park" />Parks</label>
+    <label style="color: #f00;"><input type="checkbox" color="#ff0000" name="school" />Schools</label>
+    <label style="color: #f60;"><input type="checkbox" color="#ff6600" name="store" />Stores</label>
+</div>
+<div id="map-canvas"></div>
+</body>
+</html>
