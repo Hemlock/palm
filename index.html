@@ -85,8 +85,40 @@
             options = document.getElementById('map-options');
             options.addEventListener('click', onOptionsClick, false);
             info = new google.maps.InfoWindow({});
+        }
 
+        var routeBoxer = new RouteBoxer();
+        var boxpolys;
+        function boxit() {
+          // Clear any previous route boxes from the map
+          clearBoxes();
+          var boxes = routeBoxer.box(path, 2);
+          drawBoxes(boxes);
+        }
 
+        // Draw the array of boxes as polylines on the map
+        function drawBoxes(boxes) {
+          boxpolys = new Array(boxes.length);
+          for (var i = 0; i < boxes.length; i++) {
+            boxpolys[i] = new google.maps.Rectangle({
+              bounds: boxes[i],
+              fillOpacity: 0,
+              strokeOpacity: 1.0,
+              strokeColor: '#000000',
+              strokeWeight: 1,
+              map: map
+            });
+          }
+        }
+
+        // Clear boxes currently on the map
+        function clearBoxes() {
+          if (boxpolys != null) {
+            for (var i = 0; i < boxpolys.length; i++) {
+              boxpolys[i].setMap(null);
+            }
+          }
+          boxpolys = null;
         }
 
         function onOptionsClick(e) {
@@ -125,6 +157,7 @@
               });
 
              	polyLine.setMap(map);
+            boxit();
           });
           xhr.send();
 
