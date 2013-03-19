@@ -92,7 +92,7 @@
         function boxit() {
           // Clear any previous route boxes from the map
           clearBoxes();
-          var boxes = routeBoxer.box(path, 2);
+
           drawBoxes(boxes);
         }
 
@@ -157,7 +157,6 @@
               });
 
              	polyLine.setMap(map);
-            boxit();
           });
           xhr.send();
 
@@ -170,6 +169,7 @@
             }
 
             updatePlacesTimer = setTimeout(function() {
+                var boxes = routeBoxer.box(path, 1);
                 var bounds = map.getBounds();
 
                 var slice = Array.prototype.slice;
