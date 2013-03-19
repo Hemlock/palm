@@ -63,14 +63,14 @@
     <script type="text/javascript">
         var updatePlacesTimer = null;
         var markers = [];
-        var map, route, places, boxer, options, info;
+        var map, polyLine, path, places, boxer, options, info;
         var routes = [
-            'http://www.mapmyfitness.com/ws/4p/routes/get_route_kml?consumer_key=b513571b80685c74fa95b7755d916c24048889df4&route_id=164069952&display_distance_marker_flag=1&display_custom_marker_flag=1&last_updated=3',
-            'http://www.mapmyfitness.com/ws/4p/routes/get_route_kml?consumer_key=b513571b80685c74fa95b7755d916c24048889df4&route_id=164084512&display_distance_marker_flag=1&display_custom_marker_flag=1&last_updated=3',
-            'http://www.mapmyfitness.com/ws/4p/routes/get_route_kml?consumer_key=b513571b80685c74fa95b7755d916c24048889df4&route_id=164324534&display_distance_marker_flag=1&display_custom_marker_flag=1&last_updated=3',
-            'http://www.mapmyfitness.com/ws/4p/routes/get_route_kml?consumer_key=b513571b80685c74fa95b7755d916c24048889df4&route_id=164617460&display_distance_marker_flag=1&display_custom_marker_flag=1&last_updated=3',
-            'http://www.mapmyfitness.com/ws/4p/routes/get_route_kml?consumer_key=b513571b80685c74fa95b7755d916c24048889df4&route_id=164898328&display_distance_marker_flag=1&display_custom_marker_flag=1&last_updated=3',
-            'http://www.mapmyfitness.com/ws/4p/routes/get_route_kml?consumer_key=b513571b80685c74fa95b7755d916c24048889df4&route_id=164904060&display_distance_marker_flag=1&display_custom_marker_flag=1&last_updated=3'
+          "PALM_32_1st_Day.xml",
+          "PALM_32_2nd._Day.xml",
+          "PALM_32_3rd_Day_Lake_Odessa_to_Dansville.xml",
+          "PALM_32_4th_Day_Dansville_to_Manchester.xml",
+          "PALM_32_5th_Day_Manchester_to_Petersburg.xml",
+          "PALM_32_6th_Day_Petersburg_to_Luna_Pier.xml"
         ];
 
         function initialize() {
@@ -85,6 +85,8 @@
             options = document.getElementById('map-options');
             options.addEventListener('click', onOptionsClick, false);
             info = new google.maps.InfoWindow({});
+
+
         }
 
         function onOptionsClick(e) {
@@ -94,13 +96,38 @@
         }
 
         function setRoute(routeIndex) {
+          var xhr = new XMLHttpRequest();
+          xhr.open('GET', routes[routeIndex]);
+          xhr.addEventListener('load', function() {
+              var bounds = new google.maps.LatLngBounds();
+              var doc = this.responseXML;
+              var steps = doc.getElementsByTagName('trkpt');
+              path = [];
+              var i=steps.length;
+              while (i--) {
+                var step = steps[i];
+                var latLng = new google.maps.LatLng(step.getAttribute('lat'), step.getAttribute('lon'));
+                bounds.extend(latLng);
+                path.push(latLng);
 
-            if (!route) {
-                route = new google.maps.KmlLayer({ map: map });
-            }
+              }
+              map.fitBounds(bounds);
 
-            var url = routes[routeIndex];
-            route.setUrl(url)
+              if (polyLine) {
+                polyLine.setMap(null);
+              }
+
+              polyLine = new google.maps.Polyline({
+                path: path,
+                strokeColor: "#0000ff",
+                strokeOpacity: .7,
+                strokeWeight: 4
+              });
+
+             	polyLine.setMap(map);
+          });
+          xhr.send();
+
         }
 
 
