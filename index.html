@@ -57,68 +57,59 @@
             padding-left: 19px;
         }
     </style>
-    <script type="text/javascript" src="https://maps.googleapis.com/maps/api/js?libraries=places&sensor=false"></script>
+    <script type="text/javascript" src="https://maps.googleapis.com/maps/api/js?libraries=geometry,places,&sensor=false"></script>
     <script type="text/javascript" src="http://google-maps-utility-library-v3.googlecode.com/svn/trunk/routeboxer/src/RouteBoxer.js"></script>
 
     <script type="text/javascript">
+        var PALM = {};
+        String.prototype.format = function(data) {
+            return this.replace(/{(.+?)}/g, function(match, name) {
+                return data[name] || match;
+            });
+        }
+    </script>
+    <script type="text/javascript" src="route.js"></script>
+    <script type="text/javascript" src="boxer.js"></script>
+    <script type="text/javascript" src="places.js"></script>
+    <script type="text/javascript">
+
         var updatePlacesTimer = null;
-        var markers = [];
-        var map, polyLine, path, places, boxer, options, info;
-        var routes = [
-          "PALM_32_1st_Day.xml",
-          "PALM_32_2nd._Day.xml",
-          "PALM_32_3rd_Day_Lake_Odessa_to_Dansville.xml",
-          "PALM_32_4th_Day_Dansville_to_Manchester.xml",
-          "PALM_32_5th_Day_Manchester_to_Petersburg.xml",
-          "PALM_32_6th_Day_Petersburg_to_Luna_Pier.xml"
-        ];
+        var map, places, options;
 
         function initialize() {
             map = new google.maps.Map(document.getElementById("map-canvas"), {
                 mapTypeId: google.maps.MapTypeId.ROADMAP
             });
-            google.maps.event.addListener(map, "bounds_changed", updatePlaces);
+            //google.maps.event.addListener(map, "bounds_changed", updatePlaces);
 
-            places = new google.maps.places.PlacesService(map);
+            places = new PALM.Places(map);
+            places.getColor = getColor;
+
+            var bikeLayer = new google.maps.BicyclingLayer();
+            bikeLayer.setMap(map);
+
             setRoute(0);
 
             options = document.getElementById('map-options');
             options.addEventListener('click', onOptionsClick, false);
-            info = new google.maps.InfoWindow({});
         }
 
-        var routeBoxer = new RouteBoxer();
-        var boxpolys;
-        function boxit() {
-          // Clear any previous route boxes from the map
-          clearBoxes();
+        function getColor(types) {
+            var colors = getInputs(true).reduce(function(memo, input) {
+                var color = input.getAttribute('color');
+                input.name.split(',').forEach(function(type) {
+                    memo[type] = color;
+                });
+                return memo;
+            }, {});
 
-          drawBoxes(boxes);
-        }
-
-        // Draw the array of boxes as polylines on the map
-        function drawBoxes(boxes) {
-          boxpolys = new Array(boxes.length);
-          for (var i = 0; i < boxes.length; i++) {
-            boxpolys[i] = new google.maps.Rectangle({
-              bounds: boxes[i],
-              fillOpacity: 0,
-              strokeOpacity: 1.0,
-              strokeColor: '#000000',
-              strokeWeight: 1,
-              map: map
-            });
-          }
-        }
-
-        // Clear boxes currently on the map
-        function clearBoxes() {
-          if (boxpolys != null) {
-            for (var i = 0; i < boxpolys.length; i++) {
-              boxpolys[i].setMap(null);
+            for (var i=0, length=types.length; i<length; i++) {
+                var type = types[i];
+                if (colors[type]) {
+                    return colors[type];
+                }
             }
-          }
-          boxpolys = null;
+            return '#000000';
         }
 
         function onOptionsClick(e) {
@@ -128,143 +119,25 @@
         }
 
         function setRoute(routeIndex) {
-          var xhr = new XMLHttpRequest();
-          xhr.open('GET', routes[routeIndex]);
-          xhr.addEventListener('load', function() {
-              var bounds = new google.maps.LatLngBounds();
-              var doc = this.responseXML;
-              var steps = doc.getElementsByTagName('trkpt');
-              path = [];
-              var i=steps.length;
-              while (i--) {
-                var step = steps[i];
-                var latLng = new google.maps.LatLng(step.getAttribute('lat'), step.getAttribute('lon'));
-                bounds.extend(latLng);
-                path.push(latLng);
-
-              }
-              map.fitBounds(bounds);
-
-              if (polyLine) {
-                polyLine.setMap(null);
-              }
-
-              polyLine = new google.maps.Polyline({
-                path: path,
-                strokeColor: "#0000ff",
-                strokeOpacity: .7,
-                strokeWeight: 4
-              });
-
-             	polyLine.setMap(map);
-          });
-          xhr.send();
-
+            PALM.Routes.load(map, routeIndex, updatePlaces)
         }
 
+        function getInputs(checked) {
+            var slice = Array.prototype.slice;
+            var all =  slice.call(options.getElementsByTagName('input'), 0);
+            return checked ? all.filter(function(i) { return i.checked }) : all;
+        }
 
         function updatePlaces() {
-            if (updatePlacesTimer) {
-                clearTimeout(updatePlacesTimer);
-            }
+            var types = getInputs(true).map(function(input) {
+                return input.name;
+            }, []).join(',').split(',');
 
-            updatePlacesTimer = setTimeout(function() {
-                var boxes = routeBoxer.box(path, 1);
-                var bounds = map.getBounds();
-
-                var slice = Array.prototype.slice;
-                var inputs = slice.call(options.getElementsByTagName('input'), 0);
-                clearMarkers();
-                inputs.forEach(function(input) {
-                    if (input.type == 'checkbox' && input.checked) {
-                        var search = {
-                            bounds: bounds,
-                            types: [input.name]
-                        };
-
-                        places.nearbySearch(search, function(results, status, pagination) {
-                            if (status == google.maps.places.PlacesServiceStatus.OK) {
-                                for (var i = 0; i < results.length; i++) {
-                                    createMarker(input.getAttribute('color'), results[i]);
-                                }
-                            }
-                        });
-                    }
-                });
-
-
-            }, 500);
+            places.search(types, PALM.Routes.current, getColor);
         }
-
-        function clearMarkers() {
-            markers.forEach(function(marker) {
-                marker.setMap(null);
-            });
-            markers = [];
-        }
-
-        function createMarker(color, place) {
-            if (!markerExists(place)) {
-                var symbol = {
-                    path: google.maps.SymbolPath.CIRCLE,
-                    fillColor: color,
-                    fillOpacity:.5,
-                    strokeColor: color,
-                    strokeWeight: 1,
-                    scale: 5
-                };
-
-                var marker = new google.maps.Marker({
-                    position: place.geometry.location,
-                    flat: true,
-                    icon: symbol,
-                    place: place,
-                    title: place.name + ' ' + place.rating
-                });
-                google.maps.event.addListener(marker, 'click', showInfo.bind(this, marker));
-                marker.setMap(map);
-                markers.push(marker);
-            }
-        }
-
-        function markerExists(place) {
-            var id = place.id;
-            return markers.some(function(marker) {
-                return marker.place.id == id;
-            });
-        }
-
-        function showInfo(marker) {
-            var place = marker.place;
-
-            places.getDetails(place, function(placeDetails, status) {
-                if (status == 'OK') {
-                    var content = ((placeDetails.rating == undefined ? '' : '<span class="place-rating">{rating}</span>') +
-                            '<a class="place-name" target="_blank" href="{url}">{name}</a>' +
-                            '<div class="reviews">').format(placeDetails);
-                    if (placeDetails.reviews) {
-                        placeDetails.reviews.forEach(function(review) {
-                            if (review.text) {
-                                content += ('<div class="review-author">{author_name}</div>' +
-                                    '<div class="review-text">{text}</div>').format(review);
-                            }
-                        });
-                    }
-                    info.setContent(content + '</div>');
-                    info.setPosition(marker.getPosition());
-                    info.open(map);
-                }
-            });
-        }
-
-
         google.maps.event.addDomListener(window, 'load', initialize);
 
-        String.prototype.format = function(data) {
-            return this.replace(/{(.+?)}/g, function(match, name) {
-                return data[name] || match;
-            });
-        }
+
     </script>
 </head>
 <body>
@@ -279,11 +152,9 @@
             <option>6. Friday</option>
         </select>
     </label>
-    <label style="color: #006;"><input type="checkbox" color="#000066" name="restaurant" checked />Restaurants</label>
-    <label style="color: purple;"><input type="checkbox" color="purple" name="cafe" checked />Cafes</label>
-    <label style="color: #060;"><input type="checkbox" color="#006600" name="park" />Parks</label>
-    <label style="color: #f00;"><input type="checkbox" color="#ff0000" name="school" />Schools</label>
-    <label style="color: #f60;"><input type="checkbox" color="#ff6600" name="store" />Stores</label>
+    <label style="color: #006;"><input type="checkbox" color="#000066" name="restaurant,cafe" checked />Restaurants</label>
+    <label style="color: #060;"><input type="checkbox" color="#006600" name="park,school" />Parks</label>
+    <label style="color: #f60;"><input type="checkbox" color="#ff6600" name="grocery_or_supermarket" />Stores</label>
 </div>
 <div id="map-canvas"></div>
 </body>
