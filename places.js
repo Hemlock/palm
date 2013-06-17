@@ -11,10 +11,9 @@ PALM.Places = function(map) {
     this.markers = [];
 
 };
-
+PALM.Places.STAR = "M -0.2,-1.9 0.2,-0.7 1.5,-0.7 0.5,0.1 0.9,1.3 -0.2,0.6 -1.3,1.3 -0.9,0.1 -1.9,-0.7 -0.6,-0.7";
 PALM.Places.prototype = {
     getColor: function(types) {
-        console.log(types)
         return '#ff000';
     },
 
@@ -22,11 +21,13 @@ PALM.Places.prototype = {
         this.clearMarkers();
         var me = this;
         PALM.Boxer.getBoxes(route, this.drawBoxes).forEach(function(box) {
-            me.queue.push({
-                bounds: box,
-                types: types
-            });
+            types.forEach(function(typeGroup) {
+                me.queue.push({
+                    bounds: box,
+                    types: typeGroup.split(',')
+                });
             me.next();
+            });
         });
     },
 
@@ -75,7 +76,7 @@ PALM.Places.prototype = {
     createMarker: function(color, place) {
         if (!this.markerExists(place)) {
             var symbol = {
-                path: google.maps.SymbolPath.CIRCLE,
+                path: this.isStarred(place.id) ? PALM.Places.STAR : google.maps.SymbolPath.CIRCLE,
                 fillColor: color,
                 fillOpacity:.5,
                 strokeColor: color,
@@ -90,7 +91,10 @@ PALM.Places.prototype = {
                 place: place,
                 title: place.name + ' ' + (place.rating || '{not rated}')
             });
+
+            google.maps.event.addListener(marker, 'dblclick', this.onMarkerDblClick.bind(this, marker));
             google.maps.event.addListener(marker, 'click', this.showInfo.bind(this, marker));
+
             marker.setMap(map);
             this.markers.push(marker);
         }
@@ -101,6 +105,24 @@ PALM.Places.prototype = {
         return this.markers.some(function(marker) {
             return marker.place.id == id;
         });
+    },
+
+    onMarkerDblClick: function(marker) {
+        var placeId = marker.place.id;
+        var starred = this.setStarred(placeId, !this.isStarred(placeId));
+
+        var icon = marker.getIcon();
+        icon.path = starred ? PALM.Places.STAR : google.maps.SymbolPath.CIRCLE;
+        marker.setIcon(icon);
+    },
+
+    setStarred: function(id, starred) {
+        window.localStorage.setItem(id, starred ? 1 : 0);
+        return starred;
+    },
+
+    isStarred: function(id) {
+        return !!+window.localStorage.getItem(id);
     },
 
     showInfo: function(marker) {

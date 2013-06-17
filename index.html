@@ -56,6 +56,24 @@
             margin-bottom: 5px;
             padding-left: 19px;
         }
+
+        #distance-marker {
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            display: none;
+            z-index: 2;
+            width: 18px;
+            height: 18px;
+            background-color: #000066;
+            color: white;
+            font-weight: bold;
+            border: 1px solid white;
+            padding: 2px;
+            text-align: center;
+            border-radius: 18px;
+            box-shadow: 0 0 10px #333;
+        }
     </style>
     <script type="text/javascript" src="https://maps.googleapis.com/maps/api/js?libraries=geometry,places,&sensor=false"></script>
     <script type="text/javascript" src="http://google-maps-utility-library-v3.googlecode.com/svn/trunk/routeboxer/src/RouteBoxer.js"></script>
@@ -131,7 +149,7 @@
         function updatePlaces() {
             var types = getInputs(true).map(function(input) {
                 return input.name;
-            }, []).join(',').split(',');
+            }, []);
 
             places.search(types, PALM.Routes.current, getColor);
         }
@@ -152,10 +170,11 @@
             <option>6. Friday</option>
         </select>
     </label>
-    <label style="color: #006;"><input type="checkbox" color="#000066" name="restaurant,cafe" checked />Restaurants</label>
-    <label style="color: #060;"><input type="checkbox" color="#006600" name="park,school" />Parks</label>
-    <label style="color: #f60;"><input type="checkbox" color="#ff6600" name="grocery_or_supermarket" />Stores</label>
+    <label style="color: #006;"><input type="checkbox" color="#000066" name="restaurant,cafe,bakery" checked />Restaurants</label>
+    <label style="color: #060;"><input type="checkbox" color="#006600" name="park,school" checked />Parks</label>
+    <label style="color: #f60;"><input type="checkbox" color="#ff6600" name="grocery_or_supermarket" checked />Stores</label>
 </div>
+<div id="distance-marker">43</div>
 <div id="map-canvas"></div>
 </body>
 </html>
