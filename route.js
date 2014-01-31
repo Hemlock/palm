@@ -127,13 +127,21 @@ PALM.Route.prototype = {
 }
 
 PALM.Routes = {
+//    days: [
+//        "PALM_32_1st_Day.xml",
+//        "PALM_32_2nd._Day.xml",
+//        "PALM_32_3rd_Day_Lake_Odessa_to_Dansville.xml",
+//        "PALM_32_4th_Day_Dansville_to_Manchester.xml",
+//        "PALM_32_5th_Day_Manchester_to_Petersburg.xml",
+//        "PALM_32_6th_Day_Petersburg_to_Luna_Pier.xml"
+//    ],
     days: [
-        "PALM_32_1st_Day.xml",
-        "PALM_32_2nd._Day.xml",
-        "PALM_32_3rd_Day_Lake_Odessa_to_Dansville.xml",
-        "PALM_32_4th_Day_Dansville_to_Manchester.xml",
-        "PALM_32_5th_Day_Manchester_to_Petersburg.xml",
-        "PALM_32_6th_Day_Petersburg_to_Luna_Pier.xml"
+        "PALM_33_1st_Day_Holland_to_Wayland.xml",
+        "PALM_33__2nd_Day_Wayland_to__Greenville.xml",
+        "PALM_33_3rd_Day_Greenvillle_to_St_Johns.xml",
+        "PALM_33_4th_Day_St_Johns_to_Flushing.xml",
+        "PALM_33_5th_Day_Flushing_to_North_Branch.xml",
+        "PALM_33_6th_Day_North_Branch_to_Lexington.xml"
     ],
     current: null,
     load: function(map, day, onLoad, scope) {

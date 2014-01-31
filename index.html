@@ -77,15 +77,10 @@
     </style>
     <script type="text/javascript" src="https://maps.googleapis.com/maps/api/js?libraries=geometry,places,&sensor=false"></script>
     <script type="text/javascript" src="http://google-maps-utility-library-v3.googlecode.com/svn/trunk/routeboxer/src/RouteBoxer.js"></script>
-
     <script type="text/javascript">
         var PALM = {};
-        String.prototype.format = function(data) {
-            return this.replace(/{(.+?)}/g, function(match, name) {
-                return data[name] || match;
-            });
-        }
     </script>
+    <script type="text/javascript" src="util.js"></script>
     <script type="text/javascript" src="route.js"></script>
     <script type="text/javascript" src="boxer.js"></script>
     <script type="text/javascript" src="places.js"></script>
@@ -172,7 +167,8 @@
     </label>
     <label style="color: #006;"><input type="checkbox" color="#000066" name="restaurant,cafe,bakery" checked />Restaurants</label>
     <label style="color: #060;"><input type="checkbox" color="#006600" name="park,school" checked />Parks</label>
-    <label style="color: #f60;"><input type="checkbox" color="#ff6600" name="grocery_or_supermarket" checked />Stores</label>
+    <!--<label style="color: #f60;"><input type="checkbox" color="#ff6600" name="grocery_or_supermarket" checked />Stores</label>-->
+    <label style="color: #f60;"><input type="checkbox" color="#ff6600" name="lodging" checked />Lodging</label>
 </div>
 <div id="distance-marker">43</div>
 <div id="map-canvas"></div>
