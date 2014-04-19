@@ -140,8 +140,10 @@ PALM.Routes = {
         "PALM_33__2nd_Day_Wayland_to__Greenville.xml",
         "PALM_33_3rd_Day_Greenvillle_to_St_Johns.xml",
         "PALM_33_4th_Day_St_Johns_to_Flushing.xml",
-        "PALM_33_5th_Day_Flushing_to_North_Branch.xml",
-        "PALM_33_6th_Day_North_Branch_to_Lexington.xml"
+        //"PALM_33_5th_Day_Flushing_to_North_Branch.xml",
+        //"PALM_33_6th_Day_North_Branch_to_Lexington.xml"
+        "PALM_33_5th_Day_Flushing_to_Kingston.xml",
+        "PALM_33_6th_Day_Kingston_to_Lexington.xml"
     ],
     current: null,
     load: function(map, day, onLoad, scope) {
