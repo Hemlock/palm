@@ -8,7 +8,7 @@ PALM.Places = function(map) {
     this.places = new google.maps.places.PlacesService(map);
     this.info = new google.maps.InfoWindow({});
     this.queue = [];
-    this.markers = [];
+    this.markers = {};
 
 };
 PALM.Places.STAR = "M -0.2,-1.9 0.2,-0.7 1.5,-0.7 0.5,0.1 0.9,1.3 -0.2,0.6 -1.3,1.3 -0.9,0.1 -1.9,-0.7 -0.6,-0.7";
@@ -67,10 +67,11 @@ PALM.Places.prototype = {
     },
 
     clearMarkers: function() {
-        this.markers.forEach(function(marker) {
-            marker.setMap(null);
-        });
-        this.markers = [];
+        var id;
+        for (id in this.markers) {
+            this.markers[id].setMap(null);
+        }
+        this.markers = {};
     },
 
     createMarker: function(color, place) {
@@ -88,27 +89,24 @@ PALM.Places.prototype = {
                 position: place.geometry.location,
                 flat: true,
                 icon: symbol,
-                place: place,
                 title: place.name + ' ' + (place.rating || '{not rated}')
             });
 
-            google.maps.event.addListener(marker, 'dblclick', this.onMarkerDblClick.bind(this, marker));
-            google.maps.event.addListener(marker, 'click', this.showInfo.bind(this, marker));
+            google.maps.event.addListener(marker, 'dblclick', this.onMarkerDblClick.bind(this, marker, place));
+            google.maps.event.addListener(marker, 'click', this.showInfo.bind(this, marker, place));
 
             marker.setMap(map);
-            this.markers.push(marker);
+            this.markers[place.id] = marker;
         }
     },
 
     markerExists: function(place) {
         var id = place.id;
-        return this.markers.some(function(marker) {
-            return marker.place.id == id;
-        });
+        return !!this.markers[place.id];
     },
 
-    onMarkerDblClick: function(marker) {
-        var placeId = marker.place.id;
+    onMarkerDblClick: function(marker, place) {
+        var placeId = place.id;
         var starred = this.setStarred(placeId, !this.isStarred(placeId));
 
         var icon = marker.getIcon();
@@ -125,8 +123,7 @@ PALM.Places.prototype = {
         return !!+window.localStorage.getItem(id);
     },
 
-    showInfo: function(marker) {
-        var place = marker.place;
+    showInfo: function(marker,place) {
         var info = this.info;
         this.places.getDetails(place, function(placeDetails, status) {
             if (status == 'OK') {

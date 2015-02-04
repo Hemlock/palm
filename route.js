@@ -135,15 +135,23 @@ PALM.Routes = {
 //        "PALM_32_5th_Day_Manchester_to_Petersburg.xml",
 //        "PALM_32_6th_Day_Petersburg_to_Luna_Pier.xml"
 //    ],
+//    days: [
+//        "PALM_33_1st_Day_Holland_to_Wayland.xml",
+//        "PALM_33__2nd_Day_Wayland_to__Greenville.xml",
+//        "PALM_33_3rd_Day_Greenvillle_to_St_Johns.xml",
+//        "PALM_33_4th_Day_St_Johns_to_Flushing.xml",
+//        //"PALM_33_5th_Day_Flushing_to_North_Branch.xml",
+//        //"PALM_33_6th_Day_North_Branch_to_Lexington.xml"
+//        "PALM_33_5th_Day_Flushing_to_Kingston.xml",
+//        "PALM_33_6th_Day_Kingston_to_Lexington.xml"
+//    ],
     days: [
-        "PALM_33_1st_Day_Holland_to_Wayland.xml",
-        "PALM_33__2nd_Day_Wayland_to__Greenville.xml",
-        "PALM_33_3rd_Day_Greenvillle_to_St_Johns.xml",
-        "PALM_33_4th_Day_St_Johns_to_Flushing.xml",
-        //"PALM_33_5th_Day_Flushing_to_North_Branch.xml",
-        //"PALM_33_6th_Day_North_Branch_to_Lexington.xml"
-        "PALM_33_5th_Day_Flushing_to_Kingston.xml",
-        "PALM_33_6th_Day_Kingston_to_Lexington.xml"
+        'PALM_34_1st_Day.xml',
+        'PALM_34_2nd_Day.xml',
+        'PALM_34_3rd_Day.xml',
+        'PALM_34_4th_Day.xml',
+        'PALM_34_5th_Day.xml',
+        'PALM_34_6th_Day.xml'
     ],
     current: null,
     load: function(map, day, onLoad, scope) {
