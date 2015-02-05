@@ -74,6 +74,19 @@
             border-radius: 18px;
             box-shadow: 0 0 10px #333;
         }
+        
+        #status {
+            display: none;
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            border: 2px solid red;
+            padding: 5px;
+            background-color: white;
+            box-shadow: 0 0 10px #333;
+            border: 1px solid black;
+        }
+
     </style>
     <script type="text/javascript" src="https://maps.googleapis.com/maps/api/js?libraries=geometry,places,&sensor=false"></script>
     <script type="text/javascript" src="http://google-maps-utility-library-v3.googlecode.com/svn/trunk/routeboxer/src/RouteBoxer.js"></script>
@@ -81,6 +94,7 @@
         var PALM = {};
     </script>
     <script type="text/javascript" src="util.js"></script>
+    <script type="text/javascript" src="observable.js"></script>
     <script type="text/javascript" src="route.js"></script>
     <script type="text/javascript" src="boxer.js"></script>
     <script type="text/javascript" src="places.js"></script>
@@ -97,6 +111,13 @@
 
             places = new PALM.Places(map);
             places.getColor = getColor;
+            
+            var status = document.getElementById('status');
+            places.on('update', function() {
+                var count = places.running + places.queue.length
+                status.innerHTML = count + ' searches loading...';
+                status.style.display = count ? 'block' : 'none';
+            });
 
             var bikeLayer = new google.maps.BicyclingLayer();
             bikeLayer.setMap(map);
@@ -136,8 +157,7 @@
         }
 
         function getInputs(checked) {
-            var slice = Array.prototype.slice;
-            var all =  slice.call(options.getElementsByTagName('input'), 0);
+            var all =  Array.toArray(options.getElementsByTagName('input'));
             return checked ? all.filter(function(i) { return i.checked }) : all;
         }
 
@@ -172,5 +192,6 @@
 </div>
 <div id="distance-marker">43</div>
 <div id="map-canvas"></div>
+<div id="status"></div>
 </body>
 </html>
