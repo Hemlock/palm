@@ -1,5 +1,6 @@
 
-PALM.Route = function(map, uri) {
+PALM.Route = function(map, uri, name) {
+    this.name = name;
     this.map = map;
     this.uri = uri;
     this.path = [];
@@ -127,22 +128,24 @@ PALM.Route.prototype = {
 }
 
 PALM.Routes = {
-    year: 34,
+    folder: 'DALMAC-2015',
     days: [
-        'day1.xml',
-        'day2.xml',
-        'day3.xml',
-        'day4.xml',
-        'day5.xml',
-        'day6.xml'
+        ['Wednesday','DALMAC_2015_5W_D1.xml'],
+        ['Thursday','DALMAC_2015_5W_D2.xml'],
+        ['Friday','DALMAC_2015_5W_D3.xml'],
+        ['Saturday Alt','DALMAC_2015_5W_D4_Alt_Charlevoix.xml'],
+        ['Saturday Wall','DALMAC_2015_5W_D4_Wall.xml'],
+        ['Sunday Chute','DALMAC_2015_5W_D5_Chute.xml'],
+        ['Sunday Shore','DALMAC_2015_5W_D5_Lower_Shore.xml']
     ],
     current: null,
     load: function(map, day, onLoad, scope) {
         if (this.current) {
             this.current.destroy();
         }
-        var file = this.year + '/' + this.days[day]
-        this.current = new PALM.Route(map, file);
+
+        var file = this.folder + '/' + this.days[day][1]
+        this.current = new PALM.Route(map, file, this.days[day][0]);
         this.current.load(onLoad, scope);
     }
 }

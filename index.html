@@ -74,7 +74,7 @@
             border-radius: 18px;
             box-shadow: 0 0 10px #333;
         }
-        
+
         #status {
             display: none;
             position: absolute;
@@ -104,6 +104,13 @@
         var map, places, options;
 
         function initialize() {
+            var days = document.getElementsByName('day')[0];
+            PALM.Routes.days.forEach(function(day) {
+              var option = document.createElement('option');
+              option.innerHTML = day[0];
+              days.appendChild(option);
+            })
+
             map = new google.maps.Map(document.getElementById("map-canvas"), {
                 mapTypeId: google.maps.MapTypeId.ROADMAP
             });
@@ -111,7 +118,7 @@
 
             places = new PALM.Places(map);
             places.getColor = getColor;
-            
+
             var status = document.getElementById('status');
             places.on('update', function() {
                 var count = places.running + places.queue.length
@@ -176,14 +183,7 @@
 <body>
 <div id="map-options">
     <label>Day:
-        <select name="day" onchange="setRoute(this.selectedIndex);">
-            <option>1. Sunday</option>
-            <option>2. Monday</option>
-            <option>3. Tuesday</option>
-            <option>4. Wednesday</option>
-            <option>5. Thursday</option>
-            <option>6. Friday</option>
-        </select>
+        <select name="day" onchange="setRoute(this.selectedIndex);"></select>
     </label>
     <label style="color: #006;"><input type="checkbox" color="#000066" name="restaurant,cafe,bakery" checked />Restaurants</label>
     <label style="color: #060;"><input type="checkbox" color="#006600" name="park,school"  />Parks</label>
