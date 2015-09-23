@@ -128,15 +128,11 @@ PALM.Route.prototype = {
 }
 
 PALM.Routes = {
-    folder: 'DALMAC-2015',
+    folder: 'Dads',
     days: [
-        ['Wednesday','DALMAC_2015_5W_D1.xml'],
-        ['Thursday','DALMAC_2015_5W_D2.xml'],
-        ['Friday','DALMAC_2015_5W_D3.xml'],
-        ['Saturday Alt','DALMAC_2015_5W_D4_Alt_Charlevoix.xml'],
-        ['Saturday Wall','DALMAC_2015_5W_D4_Wall.xml'],
-        ['Sunday Chute','DALMAC_2015_5W_D5_Chute.xml'],
-        ['Sunday Shore','DALMAC_2015_5W_D5_Lower_Shore.xml']
+        ['Thursday','Thursday__A2_to_Charlotte.xml'],
+        ['Friday','Friday__Charlotte_to_GR.xml'],
+        ['Saturday','Saturday__GR_to_Silver_Lake.xml'],
     ],
     current: null,
     load: function(map, day, onLoad, scope) {
