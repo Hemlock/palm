@@ -128,11 +128,14 @@ PALM.Route.prototype = {
 }
 
 PALM.Routes = {
-    folder: 'Dads',
+    folder: '35',
     days: [
-        ['Thursday','Thursday__A2_to_Charlotte.xml'],
-        ['Friday','Friday__Charlotte_to_GR.xml'],
-        ['Saturday','Saturday__GR_to_Silver_Lake.xml'],
+        ['Sunday','day1.xml'],
+        ['Monday','day2.xml'],
+        ['Tuesday','day3.xml'],
+        ['Wednesday','day4.xml'],
+        ['Thursday','day5.xml'],
+        ['Friday','day6.xml']
     ],
     current: null,
     load: function(map, day, onLoad, scope) {
