@@ -11,8 +11,7 @@ PALM.Route = function(map, uri, name) {
         top: 0,
         left: 0
     };
-
-    document.body.addEventListener('mousemove', this.onMouseMove.bind(this), false);
+    document.body.addEventListener('mousemove', this.onBodyMouseMove.bind(this), false);
     this.mouse = mouse;
 };
 
@@ -28,7 +27,6 @@ PALM.Route.prototype = {
             }
         });
         xhr.send();
-
     },
 
     onRouteLoad: function(doc) {
@@ -53,39 +51,45 @@ PALM.Route.prototype = {
         });
 
         polyLine.setMap(map);
-        google.maps.event.addListener(polyLine, "mouseover", this.onMouseOver.bind(this));
+        google.maps.event.addListener(polyLine, "mousemove", this.onRouteMouseMove.bind(this));
         google.maps.event.addListener(polyLine, "mouseout", this.onMouseOut.bind(this));
 
         this.bounds = bounds;
         this.path = path;
         this.polyLine = polyLine;
     },
-    onMouseMove: function(e) {
+    
+    onBodyMouseMove: function(e) {
         var marker = this.getDistanceMarker();
         marker.style.top = (e.clientY - 30) + 'px';
         marker.style.left = e.clientX + 'px';
     },
-
-    onMouseOver: function(e) {
-        var latLng = e.latLng;
-        var closest = this.path.concat().sort(function(a,b) {
-            return this.roughDistanceBetween(latLng, a) - this.roughDistanceBetween(latLng, b);
-        }.bind(this))[0];
-        var index = this.path.indexOf(closest);
-        var subPath = this.path.slice(0, index);
-        var meters = google.maps.geometry.spherical.computeLength(subPath);
-        var miles = meters * 0.000621371;
-        this.showDistance(Math.round(miles));
+    
+    onRouteMouseMove: function(e) {    
+        this.showDistanceTo(e.latLng);
     },
 
     onMouseOut: function() {
         this.hideDistance();
+    },
+    
+    showDistanceTo: function(latLng) {
+        var closest = this.path.concat().sort(function(a,b) {
+            return this.roughDistanceBetween(latLng, a) - this.roughDistanceBetween(latLng, b);
+        }.bind(this))[0];
+        
+        var index = this.path.indexOf(closest);
+        var subPath = this.path.slice(0, index);
+        var meters = google.maps.geometry.spherical.computeLength(subPath);
+        var miles = Math.round(meters * 0.000621371);
+        return this.showDistance(miles);
     },
 
     showDistance: function(miles) {
         var marker = this.getDistanceMarker();
         marker.innerHTML = miles;
         marker.style.display = 'block';
+        return marker;
     },
 
     hideDistance: function() {
@@ -100,7 +104,7 @@ PALM.Route.prototype = {
     },
 
     roughDistanceBetween: function(latLngA, latLngB) {
-        return (Math.pow(latLngA.lat()  - latLngB.lat()), 2) + Math.pow(latLngA.lng() - latLngB.lng(), 2);
+        return Math.pow(latLngA.lat()  - latLngB.lat(), 2) + Math.pow(latLngA.lng() - latLngB.lng(), 2);
     },
 
     distanceBetween: function(latLngA, latLngB) {
