@@ -132,14 +132,17 @@ PALM.Route.prototype = {
 }
 
 PALM.Routes = {
-    folder: '35',
+    folder: 'ADK-2016',
     days: [
-        ['Sunday','day1.xml'],
-        ['Monday','day2.xml'],
-        ['Tuesday','day3.xml'],
-        ['Wednesday','day4.xml'],
-        ['Thursday','day5.xml'],
-        ['Friday','day6.xml']
+        ['Sunday','CA2016_Day_1.xml'],
+        ['Monday','CA2016_Day_2.xml'],
+        ['Tuesday','CA2016_Day_3.xml'],
+        ['Wednesday','CA2016_Day_4_Layover.xml'],
+        ['Thursday','CA2016_Day_5.xml'],
+        ['Friday','CA2016_Day_6_Long_Option.xml'],
+        ['Friday (short)','CA2016_Day_6_Short_Route.xml'],
+        ['Saturday','CA2016_Day_6_Long_Option.xml'],
+        ['Saturday (short)','CA2016_Day_7_Short_Option.xml']
     ],
     current: null,
     load: function(map, day, onLoad, scope) {
