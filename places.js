@@ -34,7 +34,6 @@ PALM.Places.prototype = {
         
         boxes.forEach(function(box) {
             types.forEach(function(typeGroup) {
-                console.log(typeGroup);
                 me.queue.push({
                     bounds: box,
                     keyword: typeGroup

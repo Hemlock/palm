@@ -86,6 +86,35 @@
             box-shadow: 0 0 10px #333;
             border: 1px solid black;
         }
+        
+        .weather-details {
+            width: 640px;
+            height: 320px;
+            display: flex;
+            flex-shrink: 0;
+            flex-wrap: wrap;
+            
+        }
+        
+        .weather-details-hour {
+            width: 105px;
+            height: 64px;
+            position: relative;
+        }
+        
+        .weather-details-hour div {
+            position: absolute;
+            top: 50%;
+            left: 64px;
+            transform: translateY(-50%);
+        }
+        
+        .weather-details-hour div span {
+            display: block;
+        }
+        
+        .weather-details-hour > img {
+        }
 
     </style>
     <script type="text/javascript" src="https://maps.googleapis.com/maps/api/js?libraries=geometry,places,&sensor=false"></script>
@@ -98,8 +127,9 @@
     <script type="text/javascript" src="route.js"></script>
     <script type="text/javascript" src="boxer.js"></script>
     <script type="text/javascript" src="places.js"></script>
+    <script type="text/javascript" src="weather.js"></script>
     <script type="text/javascript">
-
+        
         var updatePlacesTimer = null;
         var map, places, options;
 
@@ -160,7 +190,7 @@
         }
 
         function setRoute(routeIndex) {
-            PALM.Routes.load(map, routeIndex, updatePlaces)
+            PALM.Routes.load(map, routeIndex, updatePlaces);
         }
 
         function getInputs(checked) {

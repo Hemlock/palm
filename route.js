@@ -1,11 +1,12 @@
 
-PALM.Route = function(map, uri, name) {
+PALM.Route = function(map, uri, name, date) {
     this.name = name;
     this.map = map;
     this.uri = uri;
     this.path = [];
     this.bounds = new google.maps.LatLngBounds();
     this.polyLine = null;
+    this.weather = new PALM.Weather(map, date);
 
     var mouse = {
         top: 0,
@@ -57,6 +58,11 @@ PALM.Route.prototype = {
         this.bounds = bounds;
         this.path = path;
         this.polyLine = polyLine;
+        
+
+        var date = new Date();
+        this.weather.forecast(this.path[0]);
+        this.weather.forecast(this.path[this.path.length-1]);
     },
     
     onBodyMouseMove: function(e) {
@@ -127,31 +133,34 @@ PALM.Route.prototype = {
         if (this.polyLine) {
             this.polyLine.setMap(null);
         }
+        this.weather.destroy();
     }
 
 }
 
 PALM.Routes = {
     folder: 'ADK-2016',
+    startDate: new Date(Date.parse('2016-08-21 EDT')),
     days: [
         ['Sunday','CA2016_Day_1.xml'],
         ['Monday','CA2016_Day_2.xml'],
         ['Tuesday','CA2016_Day_3.xml'],
         ['Wednesday','CA2016_Day_4_Layover.xml'],
         ['Thursday','CA2016_Day_5.xml'],
-        ['Friday','CA2016_Day_6_Long_Option.xml'],
-        ['Friday (short)','CA2016_Day_6_Short_Route.xml'],
-        ['Saturday','CA2016_Day_6_Long_Option.xml'],
-        ['Saturday (short)','CA2016_Day_7_Short_Option.xml']
+        ['Friday','CA2016_Day_6_Long_Option.xml', 5],
+        ['Friday (short)','CA2016_Day_6_Short_Route.xml', 5],
+        ['Saturday','CA2016_Day_6_Long_Option.xml', 6],
+        ['Saturday (short)','CA2016_Day_7_Short_Option.xml', 6]
     ],
     current: null,
-    load: function(map, day, onLoad, scope) {
+    load: function(map, index, onLoad, scope) {
         if (this.current) {
             this.current.destroy();
         }
 
-        var file = this.folder + '/' + this.days[day][1]
-        this.current = new PALM.Route(map, file, this.days[day][0]);
+        var day = this.days[index];
+        var file = this.folder + '/' + day[1];
+        this.current = new PALM.Route(map, file, day[1], Date.addDays(this.startDate, day[2] || index));
         this.current.load(onLoad, scope);
     }
 }
