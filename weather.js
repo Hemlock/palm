@@ -16,7 +16,7 @@ PALM.Weather.TIMES = [
 PALM.Weather.prototype = {
     forecast: function(location) {
         var days = Date.diff(this.date, Date.today()).days+1;
-        if (days < 10 ) {
+        if (days <= 10 ) {
             var loc = location.lat() + ',' + location.lng();
             var uri = 'http://api.apixu.com/v1/forecast.json?key=' + 
                 this.apiKey + '&q=' + loc + '&days=' + days;
@@ -49,7 +49,6 @@ PALM.Weather.prototype = {
     },
     
     showInfo: function(marker, forecast) {
-        console.log(forecast);
         var content = '<div class="weather-details">'
         //<div class="weather-details-title">Details for ' + forecast.date + '</div>';
         
@@ -59,7 +58,9 @@ PALM.Weather.prototype = {
                         '<img src="'+ hour.condition.icon + '" title="' + hour.condition.text + '"/>' +
                         '<div>' + 
                             '<span>' + PALM.Weather.TIMES[time] + '</span>' +
-                            '<span>' + hour.temp_f + '&deg; f</span>' +
+                            '<span title="feels like">' + hour.feelslike_f + '&deg;</span>' +
+                            '<span title="actual">(' + hour.temp_f + '&deg;)</span>' +
+                            '<span title="humidity">' + hour.humidity + '%</span>' +
                         '</div></div>');
         });
         content += '</div>';
@@ -78,4 +79,3 @@ PALM.Weather.prototype = {
     }   
     
 };
-
