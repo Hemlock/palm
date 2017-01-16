@@ -139,18 +139,15 @@ PALM.Route.prototype = {
 }
 
 PALM.Routes = {
-    folder: 'ADK-2016',
-    startDate: new Date(Date.parse('2016-08-21 EDT')),
+    folder: '36',
+    startDate: new Date(Date.parse('2017-06-25 EDT')),
     days: [
-        ['Sunday','CA2016_Day_1.xml'],
-        ['Monday','CA2016_Day_2.xml'],
-        ['Tuesday','CA2016_Day_3.xml'],
-        ['Wednesday','CA2016_Day_4_Layover.xml'],
-        ['Thursday','CA2016_Day_5.xml'],
-        ['Friday','CA2016_Day_6_Long_Option.xml', 5],
-        ['Friday (short)','CA2016_Day_6_Short_Route.xml', 5],
-        ['Saturday','CA2016_Day_6_Long_Option.xml', 6],
-        ['Saturday (short)','CA2016_Day_7_Short_Option.xml', 6]
+        ['Sunday','day_1.xml'],
+        ['Monday','day_2.xml'],
+        ['Tuesday','day_3.xml'],
+        ['Wednesday','day_4.xml'],
+        ['Thursday','day_5.xml'],
+        ['Friday','day_6.xml']
     ],
     current: null,
     load: function(map, index, onLoad, scope) {
