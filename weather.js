@@ -18,7 +18,7 @@ PALM.Weather.prototype = {
         var days = Date.diff(this.date, Date.today()).days+1;
         if (days <= 10 ) {
             var loc = location.lat() + ',' + location.lng();
-            var uri = 'http://api.apixu.com/v1/forecast.json?key=' + 
+            var uri = 'https://api.apixu.com/v1/forecast.json?key=' + 
                 this.apiKey + '&q=' + loc + '&days=' + days;
             
             var me = this;
