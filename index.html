@@ -135,6 +135,10 @@
         var map, places, options;
 
         function initialize() {
+            options = document.getElementById('map-options');
+            options.addEventListener('click', onOptionsClick, false);
+            loadOptionsPreferences();
+
             var days = document.getElementsByName('day')[0];
             PALM.Routes.days.forEach(function(day) {
               var option = document.createElement('option');
@@ -161,10 +165,28 @@
             bikeLayer.setMap(map);
 
             setRoute(0);
-
-            options = document.getElementById('map-options');
-            options.addEventListener('click', onOptionsClick, false);
         }
+        
+        function loadOptionsPreferences() {
+            var options = localStorage.getItem('options');
+            if (!options) {
+                options = 'restaurant';
+            }
+            getInputs().forEach(function(input) {
+                if (~options.indexOf(input.name)) {
+                    input.checked = true;
+                }
+            });
+        }
+        
+        function saveOptionsPreferences() {
+            var opts = getInputs(true).map(function(input) {
+                return input.name;
+            }).join(',');
+            
+            localStorage.setItem('options', opts);    
+        }
+
 
         function getColor(types) {
             var colors = getInputs(true).reduce(function(memo, input) {
@@ -199,11 +221,12 @@
             return checked ? all.filter(function(i) { return i.checked }) : all;
         }
 
-        function updatePlaces() {
+        function updatePlaces() {     
             var types = getInputs(true).map(function(input) {
                 return input.name;
-            }, []);
+            });
 
+            saveOptionsPreferences();
             places.search(types, PALM.Routes.current, getColor);
         }
         google.maps.event.addDomListener(window, 'load', initialize);
@@ -216,10 +239,10 @@
     <label>Day:
         <select name="day" onchange="setRoute(this.selectedIndex);"></select>
     </label>
-    <label style="color: #006;"><input type="checkbox" color="#000066" name="restaurant" checked />Restaurants</label>
-    <label style="color: #0aa;"><input type="checkbox" color="#00aaaa" name="laundromat" />Laundry</label>
+    <label style="color: #006;"><input type="checkbox" color="#000066" name="restaurant" />Restaurant</label>
+    <label style="color: #6a0;"><input type="checkbox" color="#66aa00" name="store" />Store<label>
+    <label style="color: #0aa;"><input type="checkbox" color="#00aaaa" name="laundry" />Laundry</label>
     <label style="color: #060;"><input type="checkbox" color="#006600" name="park"  />Parks</label>
-    <!--<label style="color: #f60;"><input type="checkbox" color="#ff6600" name="grocery_or_supermarket" checked />Stores</label>-->
     <label style="color: #f60;"><input type="checkbox" color="#ff6600" name="lodging"  />Lodging</label>
 </div>
 <div id="distance-marker">43</div>
