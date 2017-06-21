@@ -19,7 +19,7 @@ PALM.Weather.prototype = {
         if (days <= 10 ) {
             var loc = location.lat() + ',' + location.lng();
             var uri = 'https://api.apixu.com/v1/forecast.json?key=' + 
-                this.apiKey + '&q=' + loc + '&days=' + days;
+                this.apiKey + '&q=' + loc + '&dt=' + this.date.toISOShort();
             
             var me = this;
             var xhr = new XMLHttpRequest();

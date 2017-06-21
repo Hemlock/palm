@@ -73,3 +73,7 @@ Date.diff = function() {
         return toTimeSpan(a-b);
     }
 }();
+
+Date.prototype.toISOShort = function() {
+    return this.toISOString().substring(0,10);
+};
