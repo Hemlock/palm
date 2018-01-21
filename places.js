@@ -13,7 +13,6 @@ PALM.Places = function(map) {
 };
 PALM.Places.STAR = "M -0.2,-1.9 0.2,-0.7 1.5,-0.7 0.5,0.1 0.9,1.3 -0.2,0.6 -1.3,1.3 -0.9,0.1 -1.9,-0.7 -0.6,-0.7";
 PALM.Places.prototype = {
-    
     getColor: function(types) {
         return '#ff000';
     },
@@ -23,18 +22,33 @@ PALM.Places.prototype = {
         var me = this;
         this.queue = [];
         this.fire('update');
-        var boxes = PALM.Boxer.getBoxes(route, this.drawBoxes);
 
+        var boxes = PALM.Boxer.getBoxes(route, this.drawBoxes);
         boxes.sort(function(a,b){
             var ac = a.getCenter();
             var bc = b.getCenter();
-            
-            return bc.lng() - ac.lng() || ac.lat() - bc.lat();
+
+            return ac.lng() - bc.lng() || ac.lat() - bc.lat();
+        });
+
+        var path = route.getPath();
+        types.forEach(function(typeGroup) {
+            me.queue.push({
+                location: path[0],
+                radius: 3200, // ~2 miles
+                keyword: typeGroup,
+                type: typeGroup
+            }, {
+                location: path[path.length-1],
+                radius: 3200, // ~2 miles
+                keyword: typeGroup,
+                type: typeGroup
+            });
         });
         
         boxes.forEach(function(box) {
             types.forEach(function(typeGroup) {
-                me.queue.unshift({
+                me.queue.push({
                     bounds: box,
                     keyword: typeGroup,
                     type: typeGroup
@@ -61,30 +75,11 @@ PALM.Places.prototype = {
         }
         this.fire('update');
     },
-    
+
     doSearch: function(search) {
-        var boxOptions = {
-          bounds: search.bounds,
-          fillOpacity: .2,
-          fillColor: '#009900',
-          strokeOpacity: 1,
-          strokeColor: '#009900',
-          strokeWeight: 1,
-          map: map
-        }
-        var box = new google.maps.Rectangle(boxOptions);
-        
         var me = this;
         this.places.nearbySearch(search, function(results, status, pagination) {
-            setTimeout(function() {
-                box.setMap(null);
-            }, me.delay);
-            
             if (status == google.maps.places.PlacesServiceStatus.OVER_QUERY_LIMIT) {
-                boxOptions.fillColor = '#ff0000';
-                boxOptions.strokeColor = '#ff0000';
-                box.setOptions(boxOptions);
-                
                 me.queue.push(search);
                 setTimeout(function() {
                     me.running--;
@@ -100,7 +95,6 @@ PALM.Places.prototype = {
                 me.next();
             }
         });
-
     },
 
     clearMarkers: function() {
@@ -177,15 +171,12 @@ PALM.Places.prototype = {
                 }
                 info.setContent(content + '</div>');
                 info.setPosition(marker.getPosition());
+                info.marker = marker;
                 info.open(map);
             }
         });
     }
+
 };
 
 PALM.Places.mixin(Observable);
-
-
-
-
-

@@ -139,8 +139,8 @@ PALM.Route.prototype = {
 }
 
 PALM.Routes = {
-    folder: '36',
-    startDate: new Date(Date.parse('2017-06-25 EDT')),
+    folder: '37',
+    startDate: new Date(Date.parse('2018-06-23 EDT')),
     days: [
         ['Sunday','day_1.xml'],
         ['Monday','day_2.xml'],
