@@ -10,6 +10,13 @@ Function.prototype.mixin = function() {
 };
 
 String.prototype.format = function(data) {
+    if (data instanceof Array) {
+    } else if (data instanceof Object) {
+        args = [{}].concat(Array.toArray(arguments));
+        data = Object.extend.apply(Object, args)
+    } else {
+        data = Array.toArray(arguments);
+    }
     return this.replace(/{(.+?)}/g, function(match, name) {
         return data[name] || match;
     });

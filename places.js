@@ -1,6 +1,6 @@
 PALM.Places = function(map) {
     this.limit = 1;
-    this.delay = 500;
+    this.delay = 250;
     this.drawBoxes = false;
     this.timer = null;
 
@@ -33,26 +33,21 @@ PALM.Places.prototype = {
 
         var path = route.getPath();
         types.forEach(function(typeGroup) {
-            me.queue.push({
-                location: path[0],
-                radius: 3200, // ~2 miles
-                keyword: typeGroup,
-                type: typeGroup
-            }, {
+            me.queue.push(new PALM.Search({
                 location: path[path.length-1],
                 radius: 3200, // ~2 miles
                 keyword: typeGroup,
                 type: typeGroup
-            });
+            }));
         });
         
         boxes.forEach(function(box) {
             types.forEach(function(typeGroup) {
-                me.queue.push({
+                me.queue.push(new PALM.Search({
                     bounds: box,
                     keyword: typeGroup,
                     type: typeGroup
-                });
+                }));
                 me.next();
             });
         });
@@ -78,25 +73,37 @@ PALM.Places.prototype = {
 
     doSearch: function(search) {
         var me = this;
-        this.places.nearbySearch(search, function(results, status, pagination) {
-            if (status == google.maps.places.PlacesServiceStatus.OVER_QUERY_LIMIT) {
-                me.queue.push(search);
-                setTimeout(function() {
+        search.load();
+        if (search.results) {
+            search.results.forEach(function(result) {
+                me.createMarker(me.getColor(result.types), result);
+            });
+            this.running--;
+            me.step();
+        } else {
+            this.places.nearbySearch(search, function(results, status, pagination) {
+                if (status == google.maps.places.PlacesServiceStatus.OVER_QUERY_LIMIT) {
+                    me.queue.push(search);
+                    setTimeout(function() {
+                        me.running--;
+                        me.next();
+                    }, me.delay)
+                } else {
+                    if (status == google.maps.places.PlacesServiceStatus.OK) {
+                        search.save(results);
+                        search.results.forEach(function(result) {
+                            me.createMarker(me.getColor(result.types), result);
+                        });
+                    } else if (status== google.maps.places.PlacesServiceStatus.ZERO_RESULTS) {
+                        search.save([]);
+                    }
                     me.running--;
                     me.next();
-                }, me.delay)
-            } else {
-                if (status == google.maps.places.PlacesServiceStatus.OK) {
-                    results.forEach(function(result) {
-                        me.createMarker(me.getColor(result.types), result);
-                    });
                 }
-                me.running--;
-                me.next();
-            }
-        });
+            });
+        }
     },
-
+    
     clearMarkers: function() {
         var id;
         for (id in this.markers) {
@@ -127,13 +134,12 @@ PALM.Places.prototype = {
             google.maps.event.addListener(marker, 'click', this.showInfo.bind(this, marker, place));
 
             marker.setMap(map);
-            this.markers[place.id] = marker;
+            this.markers[place.placeId] = marker;
         }
     },
 
     markerExists: function(place) {
-        var id = place.id;
-        return !!this.markers[place.id];
+        return !!this.markers[place.placeId];
     },
 
     onMarkerDblClick: function(marker, place) {
@@ -156,7 +162,8 @@ PALM.Places.prototype = {
 
     showInfo: function(marker,place) {
         var info = this.info;
-        this.places.getDetails(place, function(placeDetails, status) {
+        console.log(place)
+        this.places.getDetails({placeId: place.placeId}, function(placeDetails, status) {
             if (status == 'OK') {
                 var content = ((placeDetails.rating == undefined ? '' : '<span class="place-rating">{rating}</span>') +
                     '<a class="place-name" target="_blank" href="{url}">{name}</a>' +
