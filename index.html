@@ -13,6 +13,12 @@
             width: 100%;
             box-sizing: border-box;
         }
+        
+        @media print {
+            #map-options {
+                display: none !important;
+            }
+        }
 
         #map-options {
             position: absolute;
@@ -27,7 +33,38 @@
         #map-options label {
             display: block;
         }
+        
+        .map-marker-label {
+            position: absolute;
+            background-color: white;
+            padding: 2px;
+            display: inline-block;
+            width: 100px;
+        }
+        
+        .map-marker-label-left {
+            transform: translate(10px, -50%);
+        }
 
+        .map-marker-label-right {
+            text-align: right;
+            transform: translate(calc(-100% - 10px), -50%);
+        }
+
+        .map-marker-label-top {
+            text-align: center;
+            transform: translate(-50%, calc(-100% - 10px));
+        }
+
+        .map-marker-label-bottom {
+            text-align: center;
+            transform: translate(-50%, 10px);
+        }
+        
+        .map-marker-label-hidden {
+            display: none;
+        }
+        
         .place-name {
             font-size: 14px;
             font-weight: bold;
@@ -39,7 +76,7 @@
         }
 
         .place-rating:after {
-            content: " stars"
+            content: " \2605"
         }
 
         .reviews {
@@ -125,7 +162,9 @@
     </script>
     <script type="text/javascript" src="util.js"></script>
     <script type="text/javascript" src="observable.js"></script>
+    <script type="text/javascript" src="markerLabel.js"></script>
     <script type="text/javascript" src="storage.js"></script>
+    
     <script type="text/javascript" src="route.js"></script>
     <script type="text/javascript" src="boxer.js"></script>
     <script type="text/javascript" src="search.js"></script>
@@ -150,7 +189,15 @@
             })
 
             map = new google.maps.Map(document.getElementById("map-canvas"), {
-                mapTypeId: google.maps.MapTypeId.ROADMAP
+                mapTypeId: google.maps.MapTypeId.ROADMAP,
+                styles: [{
+                    featureType: 'poi',
+                    stylers: [{visibility: 'off'}]
+                }, {
+                    featureType: 'transit',
+                    elementType: 'labels.icon',
+                    stylers: [{visibility: 'off'}]
+                }]
             });
             //google.maps.event.addListener(map, "bounds_changed", updatePlaces);
 

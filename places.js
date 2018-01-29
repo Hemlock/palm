@@ -9,7 +9,10 @@ PALM.Places = function(map) {
     this.info = new google.maps.InfoWindow({});
     this.queue = [];
     this.markers = {};
-
+    this.rectangles = [];
+    
+    google.maps.event.addListener(map, 'bounds_changed', this.onBoundsChanged.bind(this));
+    this.updateLabels();
 };
 PALM.Places.STAR = "M -0.2,-1.9 0.2,-0.7 1.5,-0.7 0.5,0.1 0.9,1.3 -0.2,0.6 -1.3,1.3 -0.9,0.1 -1.9,-0.7 -0.6,-0.7";
 PALM.Places.prototype = {
@@ -19,6 +22,8 @@ PALM.Places.prototype = {
 
     search: function(types, route) {
         this.clearMarkers();
+        this.clearRectangles();
+        
         var me = this;
         this.queue = [];
         this.fire('update');
@@ -50,6 +55,16 @@ PALM.Places.prototype = {
                 }));
                 me.next();
             });
+            
+            me.rectangles.push(new google.maps.Rectangle({
+                bounds: box,
+                strokeWeight: 0,
+                strokeColor: '#000000',
+                strokeOpacity: 0.6,
+                fillOpacity: 0.05,
+                map: map,
+                zIndex: -1
+            }));
         });
     },
 
@@ -111,6 +126,11 @@ PALM.Places.prototype = {
         }
         this.markers = {};
     },
+    
+    clearRectangles: function() {
+        this.rectangles.forEach((rect)=> rect.setMap(null));
+        this.rectangles = [];
+    },
 
     createMarker: function(color, place) {
         if (!this.markerExists(place)) {
@@ -120,14 +140,18 @@ PALM.Places.prototype = {
                 fillOpacity:.5,
                 strokeColor: color,
                 strokeWeight: 1,
-                scale: 5
+                scale: 5,
+                labelOrigin: {
+                    x: 5,
+                    y: 0
+                }
             };
 
             var marker = new google.maps.Marker({
                 position: place.geometry.location,
                 flat: true,
                 icon: symbol,
-                title: place.name + ' ' + (place.rating || '{not rated}')
+                title: place.name + ' ' + (place.rating ? place.rating + '\u2605s' : '')
             });
 
             google.maps.event.addListener(marker, 'dblclick', this.onMarkerDblClick.bind(this, marker, place));
@@ -150,6 +174,53 @@ PALM.Places.prototype = {
         icon.path = starred ? PALM.Places.STAR : google.maps.SymbolPath.CIRCLE;
         marker.setIcon(icon);
     },
+    
+    onBoundsChanged: function() {
+        this.updateLabels();
+    },
+    
+    updateLabels: function() {
+        var timer = null;
+        return function() {
+            if (timer) {
+                clearTimeout(timer)
+            }
+            
+            timer = setTimeout(() => {
+                if (map.zoom >= 16) {
+                    this.showMarkerLabels();
+                } else {
+                    this.hideMarkerLabels();
+                }
+            }, 20)
+        }
+    }(),
+    
+    showMarkerLabels: function() {
+        var bounds = map.getBounds();
+        for (var placeId in this.markers) {
+            var marker = this.markers[placeId];
+            if (bounds.contains(marker.position)) {
+                this.showMarkerLabel(marker);
+            } else {
+                this.hideMarkerLabel(marker);
+            }
+        }
+    },
+    
+    showMarkerLabel: function(marker) {
+        marker.setLabel(marker.title);
+    },
+    
+    hideMarkerLabels: function() {
+        for (var placeId in this.markers) {
+            this.hideMarkerLabel(this.markers[placeId]);
+        }
+    },
+    
+    hideMarkerLabel: function(marker) {
+        marker.setLabel(null);    
+    },
 
     setStarred: function(id, starred) {
         window.localStorage.setItem(id, starred ? 1 : 0);
@@ -162,7 +233,6 @@ PALM.Places.prototype = {
 
     showInfo: function(marker,place) {
         var info = this.info;
-        console.log(place)
         this.places.getDetails({placeId: place.placeId}, function(placeDetails, status) {
             if (status == 'OK') {
                 var content = ((placeDetails.rating == undefined ? '' : '<span class="place-rating">{rating}</span>') +
