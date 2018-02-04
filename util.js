@@ -18,7 +18,7 @@ String.prototype.format = function(data) {
         data = Array.toArray(arguments);
     }
     return this.replace(/{(.+?)}/g, function(match, name) {
-        return data[name] || match;
+        return (name in data) ? data[name] : match;
     });
 };
 

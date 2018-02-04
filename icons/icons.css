@@ -1,0 +1,26 @@
+.icon {
+    padding-left: 20px;
+    background-repeat: no-repeat;
+    min-height: 23px;
+}
+
+.icon.restaurant {
+    background-image: url('restaurant-small.png')
+}
+
+.icon.dot {
+    background-image: url('dot-small.png')
+}
+
+.icon.shopping {
+    background-image: url('shopping-small.png')
+}
+
+.icon.tree {
+    background-image: url('tree-small.png')
+}
+
+.icon.lodging {
+    background-image: url('lodging-small.png')
+}
+

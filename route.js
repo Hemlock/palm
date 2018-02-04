@@ -137,27 +137,3 @@ PALM.Route.prototype = {
     }
 
 }
-
-PALM.Routes = {
-    folder: '37',
-    startDate: new Date(Date.parse('2018-06-23 EDT')),
-    days: [
-        ['Sunday','day_1.xml'],
-        ['Monday','day_2.xml'],
-        ['Tuesday','day_3.xml'],
-        ['Wednesday','day_4.xml'],
-        ['Thursday','day_5.xml'],
-        ['Friday','day_6.xml']
-    ],
-    current: null,
-    load: function(map, index, onLoad, scope) {
-        if (this.current) {
-            this.current.destroy();
-        }
-
-        var day = this.days[index];
-        var file = this.folder + '/' + day[1];
-        this.current = new PALM.Route(map, file, day[1], Date.addDays(this.startDate, day[2] || index));
-        this.current.load(onLoad, scope);
-    }
-}

@@ -14,7 +14,7 @@ PALM.Places = function(map) {
     google.maps.event.addListener(map, 'bounds_changed', this.onBoundsChanged.bind(this));
     this.updateLabels();
 };
-PALM.Places.STAR = "M -0.2,-1.9 0.2,-0.7 1.5,-0.7 0.5,0.1 0.9,1.3 -0.2,0.6 -1.3,1.3 -0.9,0.1 -1.9,-0.7 -0.6,-0.7";
+
 PALM.Places.prototype = {
     getColor: function(types) {
         return '#ff000';
@@ -37,35 +37,41 @@ PALM.Places.prototype = {
         });
 
         var path = route.getPath();
-        types.forEach(function(typeGroup) {
-            me.queue.push(new PALM.Search({
-                location: path[path.length-1],
-                radius: 3200, // ~2 miles
-                keyword: typeGroup,
-                type: typeGroup
-            }));
-        });
-        
-        boxes.forEach(function(box) {
-            types.forEach(function(typeGroup) {
+        var i =0;
+        while (i < 2) {
+            types.forEach(function(type) {
                 me.queue.push(new PALM.Search({
-                    bounds: box,
-                    keyword: typeGroup,
-                    type: typeGroup
+                    location: path[path.length-1],
+                    radius: 3200, // ~2 miles
+                    type_name: type.name,
+                    keyword: i ? type.term : null,
+                    type: type.term
                 }));
-                me.next();
             });
             
-            me.rectangles.push(new google.maps.Rectangle({
-                bounds: box,
-                strokeWeight: 0,
-                strokeColor: '#000000',
-                strokeOpacity: 0.6,
-                fillOpacity: 0.05,
-                map: map,
-                zIndex: -1
-            }));
-        });
+            boxes.forEach(function(box) {
+                types.forEach(function(type) {
+                    me.queue.push(new PALM.Search({
+                        type_name: type.name,
+                        bounds: box,
+                        keyword: i ? type.term : null,
+                        type: type.term
+                    }));
+                    me.next();
+                });
+                
+                me.rectangles.push(new google.maps.Rectangle({
+                    bounds: box,
+                    strokeWeight: 0,
+                    strokeColor: '#000000',
+                    strokeOpacity: 0.6,
+                    fillOpacity: 0.05,
+                    map: map,
+                    zIndex: -1
+                }));
+            });
+            i++;
+        }
     },
 
     next: function() {
@@ -90,8 +96,11 @@ PALM.Places.prototype = {
         var me = this;
         search.load();
         if (search.results) {
-            search.results.forEach(function(result) {
-                me.createMarker(me.getColor(result.types), result);
+            search.results.forEach((result) => {
+                var type = PALM.Types.byName[search.type_name];
+                if (me.keepResult(result, type)) {
+                    this.createMarker(type.icon, result);
+                }
             });
             this.running--;
             me.step();
@@ -106,8 +115,11 @@ PALM.Places.prototype = {
                 } else {
                     if (status == google.maps.places.PlacesServiceStatus.OK) {
                         search.save(results);
-                        search.results.forEach(function(result) {
-                            me.createMarker(me.getColor(result.types), result);
+                        search.results.forEach((result) => {
+                            var type = PALM.Types.byName[search.type_name];
+                            if (me.keepResult(result, type)) {
+                                me.createMarker(type.icon, result);
+                            }
                         });
                     } else if (status== google.maps.places.PlacesServiceStatus.ZERO_RESULTS) {
                         search.save([]);
@@ -118,7 +130,20 @@ PALM.Places.prototype = {
             });
         }
     },
-    
+
+    keepResult: function(result, type) {
+        var keep = false;
+        if (type.keeps == null || type.keeps.length == 0) {
+            keep = true;
+        } else {
+            keep = result.types.some((term) => ~type.keeps.indexOf(term))
+        }
+
+        keep = keep && (type.skips == null || !result.types.some((term)=> ~type.skips.indexOf(term)));
+        console.log(result.name, result.types, keep)
+        return keep;
+    },
+
     clearMarkers: function() {
         var id;
         for (id in this.markers) {
@@ -132,31 +157,15 @@ PALM.Places.prototype = {
         this.rectangles = [];
     },
 
-    createMarker: function(color, place) {
+    createMarker: function(icon, place) {
         if (!this.markerExists(place)) {
-            var symbol = {
-                path: this.isStarred(place.id) ? PALM.Places.STAR : google.maps.SymbolPath.CIRCLE,
-                fillColor: color,
-                fillOpacity:.5,
-                strokeColor: color,
-                strokeWeight: 1,
-                scale: 5,
-                labelOrigin: {
-                    x: 5,
-                    y: 0
-                }
-            };
-
             var marker = new google.maps.Marker({
                 position: place.geometry.location,
                 flat: true,
-                icon: symbol,
+                icon: 'icons/' + icon + '-small.png',
                 title: place.name + ' ' + (place.rating ? place.rating + '\u2605s' : '')
             });
-
-            google.maps.event.addListener(marker, 'dblclick', this.onMarkerDblClick.bind(this, marker, place));
             google.maps.event.addListener(marker, 'click', this.showInfo.bind(this, marker, place));
-
             marker.setMap(map);
             this.markers[place.placeId] = marker;
         }
@@ -165,16 +174,7 @@ PALM.Places.prototype = {
     markerExists: function(place) {
         return !!this.markers[place.placeId];
     },
-
-    onMarkerDblClick: function(marker, place) {
-        var placeId = place.id;
-        var starred = this.setStarred(placeId, !this.isStarred(placeId));
-
-        var icon = marker.getIcon();
-        icon.path = starred ? PALM.Places.STAR : google.maps.SymbolPath.CIRCLE;
-        marker.setIcon(icon);
-    },
-    
+   
     onBoundsChanged: function() {
         this.updateLabels();
     },
@@ -220,15 +220,6 @@ PALM.Places.prototype = {
     
     hideMarkerLabel: function(marker) {
         marker.setLabel(null);    
-    },
-
-    setStarred: function(id, starred) {
-        window.localStorage.setItem(id, starred ? 1 : 0);
-        return starred;
-    },
-
-    isStarred: function(id) {
-        return !!+window.localStorage.getItem(id);
     },
 
     showInfo: function(marker,place) {

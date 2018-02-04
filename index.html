@@ -3,8 +3,17 @@
 <head>
     <meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
     <style type="text/css">
-        html { height: 100% }
-        body { height: 100%; margin: 0; padding: 0 }
+        html { 
+            height: 100% 
+        }
+
+        body { 
+            height: 100%; 
+            margin: 0; 
+            padding: 0;
+            font-family: Arial, Helvetica, sans-serif;
+        }
+
         #map-canvas {
             position: absolute;
             top: 0;
@@ -23,42 +32,46 @@
         #map-options {
             position: absolute;
             left: 5px;
-            bottom: 5px;
+            bottom: 30px;
             z-index: 1;
             background-color: white;
-            box-shadow: 0 0 10px #333;
-            border: 1px solid black;
+            box-shadow: 0 0 3px #999;
+            border: 1px solid #999;
             padding: 3px;
         }
+
         #map-options label {
             display: block;
+            font-size: 12px;
         }
         
         .map-marker-label {
             position: absolute;
-            background-color: white;
+            color: white;
+            background-color: rgba(100,100,100,0.5);
             padding: 2px;
             display: inline-block;
             width: 100px;
+            border-radius: 3px;
         }
         
         .map-marker-label-left {
-            transform: translate(10px, -50%);
+            transform: translate(10px, calc(-50% - 17px))
         }
 
         .map-marker-label-right {
             text-align: right;
-            transform: translate(calc(-100% - 10px), -50%);
+            transform: translate(calc(-100% - 10px), calc(-50% - 17px));
         }
 
         .map-marker-label-top {
             text-align: center;
-            transform: translate(-50%, calc(-100% - 10px));
+            transform: translate(-50%, calc(-100% - 27px));
         }
 
         .map-marker-label-bottom {
             text-align: center;
-            transform: translate(-50%, 10px);
+            transform: translate(-50%, 1px);
         }
         
         .map-marker-label-hidden {
@@ -104,9 +117,9 @@
             height: 18px;
             background-color: #000066;
             color: white;
-            font-weight: bold;
+            font-size: 12px;
             border: 1px solid white;
-            padding: 2px;
+            padding: 4px 3px 0 2px;
             text-align: center;
             border-radius: 18px;
             box-shadow: 0 0 10px #333;
@@ -120,8 +133,8 @@
             border: 2px solid red;
             padding: 5px;
             background-color: white;
-            box-shadow: 0 0 10px #333;
-            border: 1px solid black;
+            box-shadow: 0 0 3px #999;
+            border: 1px solid #999;
         }
         
         .weather-details {
@@ -130,7 +143,6 @@
             display: flex;
             flex-shrink: 0;
             flex-wrap: wrap;
-            
         }
         
         .weather-details-hour {
@@ -155,6 +167,7 @@
         }
 
     </style>
+    <link rel="stylesheet" href="icons/icons.css" />
     <script type="text/javascript" src="https://maps.googleapis.com/maps/api/js?libraries=geometry,places,&sensor=false"></script>
     <script type="text/javascript" src="RouteBoxer.js"></script>
     <script type="text/javascript">
@@ -165,6 +178,9 @@
     <script type="text/javascript" src="markerLabel.js"></script>
     <script type="text/javascript" src="storage.js"></script>
     
+    <script type="text/javascript" src="types.js"></script>
+    <script type="text/javascript" src="options.js"></script>
+    <script type="text/javascript" src="routes.js"></script>
     <script type="text/javascript" src="route.js"></script>
     <script type="text/javascript" src="boxer.js"></script>
     <script type="text/javascript" src="search.js"></script>
@@ -173,21 +189,8 @@
     <script type="text/javascript" src="weather.js"></script>
     <script type="text/javascript">
         
-        var updatePlacesTimer = null;
-        var map, places, options;
-
+        var map, places;
         function initialize() {
-            options = document.getElementById('map-options');
-            options.addEventListener('click', onOptionsClick, false);
-            loadOptionsPreferences();
-
-            var days = document.getElementsByName('day')[0];
-            PALM.Routes.days.forEach(function(day) {
-              var option = document.createElement('option');
-              option.innerHTML = day[0];
-              days.appendChild(option);
-            })
-
             map = new google.maps.Map(document.getElementById("map-canvas"), {
                 mapTypeId: google.maps.MapTypeId.ROADMAP,
                 styles: [{
@@ -199,11 +202,12 @@
                     stylers: [{visibility: 'off'}]
                 }]
             });
-            //google.maps.event.addListener(map, "bounds_changed", updatePlaces);
+
+            PALM.Routes.initialize('37', () => {
+                PALM.Options.initialize();
+            });
 
             places = new PALM.Places(map);
-            places.getColor = getColor;
-
             var status = document.getElementById('status');
             places.on('update', function() {
                 var count = places.running + places.queue.length
@@ -213,88 +217,12 @@
 
             var bikeLayer = new google.maps.BicyclingLayer();
             bikeLayer.setMap(map);
-
-            setRoute(0);
-        }
-        
-        function loadOptionsPreferences() {
-            var options = localStorage.getItem('options');
-            if (!options) {
-                options = 'restaurant';
-            }
-            getInputs().forEach(function(input) {
-                if (~options.indexOf(input.name)) {
-                    input.checked = true;
-                }
-            });
-        }
-        
-        function saveOptionsPreferences() {
-            var opts = getInputs(true).map(function(input) {
-                return input.name;
-            }).join(',');
-            
-            localStorage.setItem('options', opts);    
-        }
-
-
-        function getColor(types) {
-            var colors = getInputs(true).reduce(function(memo, input) {
-                var color = input.getAttribute('color');
-                input.name.split(',').forEach(function(type) {
-                    memo[type] = color;
-                });
-                return memo;
-            }, {});
-
-            for (var i=0, length=types.length; i<length; i++) {
-                var type = types[i];
-                if (colors[type]) {
-                    return colors[type];
-                }
-            }
-            return '#000000';
-        }
-
-        function onOptionsClick(e) {
-            if (e.target.tagName == 'INPUT') {
-                updatePlaces();
-            }
-        }
-
-        function setRoute(routeIndex) {
-            PALM.Routes.load(map, routeIndex, updatePlaces);
-        }
-
-        function getInputs(checked) {
-            var all =  Array.toArray(options.getElementsByTagName('input'));
-            return checked ? all.filter(function(i) { return i.checked }) : all;
-        }
-
-        function updatePlaces() {     
-            var types = getInputs(true).map(function(input) {
-                return input.name;
-            });
-
-            saveOptionsPreferences();
-            places.search(types, PALM.Routes.current, getColor);
         }
         google.maps.event.addDomListener(window, 'load', initialize);
-
 
     </script>
 </head>
 <body>
-<div id="map-options">
-    <label>Day:
-        <select name="day" onchange="setRoute(this.selectedIndex);"></select>
-    </label>
-    <label style="color: #006;"><input type="checkbox" color="#000066" name="restaurant" />Restaurant</label>
-    <label style="color: #6a0;"><input type="checkbox" color="#66aa00" name="supermarket" />Supermarket<label>
-    <label style="color: #0aa;"><input type="checkbox" color="#00aaaa" name="laundry" />Laundry</label>
-    <label style="color: #060;"><input type="checkbox" color="#006600" name="park"  />Parks</label>
-    <label style="color: #f60;"><input type="checkbox" color="#ff6600" name="lodging"  />Lodging</label>
-</div>
 <div id="distance-marker">43</div>
 <div id="map-canvas"></div>
 <div id="status"></div>
