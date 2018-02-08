@@ -1,34 +1,58 @@
 PALM.Options = {
     initialize: function() {
+        this.state = {};
+        this.loadState();
+
         this.container = document.createElement('div');
         this.container.id = 'map-options';
         document.body.appendChild(this.container);
 
         this.buildDaySelector(); 
         this.buildTypeCheckboxes();
-        PALM.Routes.load(0, this.updatePlaces, this);
+
+        var day = this.state.folder == PALM.Routes.folder ? this.state.day : 0;
+        Object.assign(this.state, { day: day, folder: PALM.Routes.folder });
+        PALM.Routes.load(day, this.updatePlaces, this);
+    },
+
+    loadState: function() {
+        var def = { day: 0, folder: PALM.Routes.folder, checked: null };
+        this.state = PALM.Storage.get('options', def);
+        if (this.state instanceof Array) {
+            debugger
+            this.state = def;
+            this.saveState();
+        }
+    },
+
+    saveState: function() {
+        PALM.Storage.set('options', this.state);
     },
 
     buildDaySelector: function() {
         var doc = this.container.ownerDocument;
         this.daySelector = doc.createElement('select');
-        PALM.RouteInfo.days.forEach((day) => {
+        PALM.RouteInfo.days.forEach((day, index) => {
             let option = doc.createElement('option');
             option.value = day[1];
             option.innerHTML = day[0];
+            option.selected = (index == this.state.day);
+
             this.daySelector.appendChild(option);
         });
         this.container.appendChild(this.daySelector);
         this.daySelector.addEventListener('change', ()=> {
-            PALM.Routes.load(this.daySelector.selectedIndex, this.updatePlaces, this);
+            var day = this.daySelector.selectedIndex;
+            this.state.day = day;
+            PALM.Routes.load(day, this.updatePlaces, this);
+            this.saveState();
         });
     },
     
     buildTypeCheckboxes: function() {
         var doc = this.container.ownerDocument;
-        var saved = PALM.Storage.get('options');
-        var checked = saved 
-         ? saved.map((name) => PALM.Types.byName[name]) 
+        var checked = this.state.checked
+         ? this.state.checked.map((name) => PALM.Types.byName[name]) 
          : PALM.Types.filter((type) => type.checked);
 
         this.checkboxes = [];
@@ -56,7 +80,8 @@ PALM.Options = {
             return memo;
         }, []);
 
-        PALM.Storage.set('options', names);
+        this.state.checked = names;
+        this.saveState();
         
         let types = PALM.Types.filter((type) => ~names.indexOf(type.name));
         places.search(types, PALM.Routes.current);    

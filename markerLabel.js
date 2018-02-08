@@ -1,41 +1,11 @@
- google.maps.Marker.prototype.setLabel = function(label){
-     if(this.label) {
-         if (label) {
-             this.label.setText(label);
-         } else {
-             this.label.setMap(null);
-             this.label = null;
-         }
-     } else if (label) {
-        this.label = new PALM.MarkerLabel({
-          map: this.map,
-          marker: this,
-          text: label
-        });
-        this.label.bindTo('position', this, 'position');
-     }
-};
-
-google.maps.Marker.prototype.setMap = function() {
-    var setMap = google.maps.Marker.prototype.setMap;
-    return function(map){
-        if (this.label) {
-            this.label.setMap(map);
-        }  
-        setMap.apply(this, arguments);
-    };
-}();
-    
- 
-
 PALM.MarkerLabel = function(options) {
     this.setValues(options);
     this.span = document.createElement('span');
     this.span.className = 'map-marker-label';
-    PALM.MarkerLabel.spans.push(this.span);
+    PALM.MarkerLabel.instances.push(this);
 };
 
-PALM.MarkerLabel.spans = [];
+PALM.MarkerLabel.instances = [];
 
 PALM.MarkerLabel.prototype = Object.assign(new google.maps.OverlayView(), {
     onAdd: function() {
@@ -65,45 +35,84 @@ PALM.MarkerLabel.prototype = Object.assign(new google.maps.OverlayView(), {
         this.span.style.left = position.x + 'px';
         this.span.style.top = position.y + 'px';
         this.span.classList.add('map-marker-label-left');
-        
-        if (this.overlaps()) {
+        var bounds = map.getBounds();
+        var boxes = PALM.Marker.instances.reduce((memo, marker) => {
+            if (marker != this.marker && bounds.contains(marker.getPosition())) {
+                memo.push(this.getMarkerBox(marker));
+            }
+            return memo;
+        }, []);
+
+        boxes = PALM.MarkerLabel.instances
+            .sort((a,b) => b.offsetLeft - a.offsetLeft)
+            .reduce((memo, label) => {
+               if (label !== this) {
+                   memo.push(label.getBox());
+               } 
+               return memo;
+            }, boxes);
+
+        if (this.overlaps(boxes)) {
             this.span.classList.remove('map-marker-label-left');
             this.span.classList.add('map-marker-label-right');
-            if (this.overlaps()) {
+            if (this.overlaps(boxes)) {
                 this.span.classList.remove('map-marker-label-right');
                 this.span.classList.add('map-marker-label-bottom');
-                if (this.overlaps()) {
-                    this.span.classList.remove('map-marker-label-bottom');
-                    this.span.classList.add('map-marker-label-top');
-                    if (this.overlaps()) {
+            //     if (this.overlaps(boxes)) {
+            //         this.span.classList.remove('map-marker-label-bottom');
+            //         this.span.classList.add('map-marker-label-top');
+                    if (this.overlaps(boxes)) {
                         this.span.classList.remove('map-marker-label-top');
                         this.span.classList.add('map-marker-label-hidden');
                     }
                 }
-            } 
+            // } 
         }
     },
     
-    overlaps: function() {
-        var b = this.span.getBoundingClientRect();
-        var overlaps = PALM.MarkerLabel.spans.sort((a,b) => b.offsetLeft - a.offsetLeft).some((span) => {
-            if (span != this.span) {
-                var a = span.getBoundingClientRect();
-                return ((a.left <= b.left && a.right >= b.left) || (a.right >= b.right && a.left <= b.right)) &&
-                    ((a.top <= b.top && a.bottom >= b.bottom) || (a.bottom >= b.bottom && a.top <= b.bottom));
-            }
-            return false;
+    overlaps: function(boxes) {
+        var b = this.getBox();
+        return boxes.some((a) => {
+            return !(
+                ((a.y + a.height) < (b.y)) ||
+                (a.y > (b.y + b.height)) ||
+                ((a.x + a.width) < b.x) ||
+                (a.x > (b.x + b.width))
+            );
         });
-        return overlaps;
     },
+
+    getBox: function(recalc) {
+        return this.span.getBoundingClientRect();
+    },
+
+    getMarkerBox: function() {
+        var span = document.createElement('span');
+        span.style.display = 'inline-block';
+        span.style.position = 'absolute';
+        span.style.height = '28px';
+        span.style.width = '21px';
+        span.backgroundColor = 'black';
+        span.style.transform = 'translate(-50%, -100%)';
+
+        return function(marker) {
+            if (!span.parentNode) {
+                this.getPanes().overlayImage.appendChild(span);
+            }
+            var pos = this.getProjection().fromLatLngToDivPixel(marker.getPosition());
+            span.style.top = pos.y + 'px';
+            span.style.left = pos.x + 'px';
+            return span.getBoundingClientRect();
+        }
+    }(),
     
     onRemove: function() {
         this.unbindAll();
+        var instances = PALM.MarkerLabel.instances;
+        var index = instances.indexOf(this);
+        instances.splice(index, 1);
+        
         if (this.span) {
-            var spans = PALM.MarkerLabel.spans;
-            var index = spans.indexOf(this.span);
-            spans.splice(index, 1);
-            
             this.span.parentNode.removeChild(this.span);
         }
     }

@@ -140,14 +140,15 @@ PALM.Places.prototype = {
         }
 
         keep = keep && (type.skips == null || !result.types.some((term)=> ~type.skips.indexOf(term)));
-        console.log(result.name, result.types, keep)
         return keep;
     },
 
     clearMarkers: function() {
         var id;
         for (id in this.markers) {
-            this.markers[id].setMap(null);
+            var marker = this.markers[id];
+            this.fire('markerremoved', id, marker);
+            marker.setMap(null);
         }
         this.markers = {};
     },
@@ -159,15 +160,15 @@ PALM.Places.prototype = {
 
     createMarker: function(icon, place) {
         if (!this.markerExists(place)) {
-            var marker = new google.maps.Marker({
+            var marker = new PALM.Marker({
                 position: place.geometry.location,
-                flat: true,
                 icon: 'icons/' + icon + '-small.png',
                 title: place.name + ' ' + (place.rating ? place.rating + '\u2605s' : '')
             });
             google.maps.event.addListener(marker, 'click', this.showInfo.bind(this, marker, place));
             marker.setMap(map);
             this.markers[place.placeId] = marker;
+            this.fire('markeradded', place, marker);
         }
     },
 
@@ -187,7 +188,7 @@ PALM.Places.prototype = {
             }
             
             timer = setTimeout(() => {
-                if (map.zoom >= 16) {
+                if (map.zoom >= 14) {
                     this.showMarkerLabels();
                 } else {
                     this.hideMarkerLabels();
