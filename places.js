@@ -1,17 +1,51 @@
-PALM.Places = function(map) {
+css(`
+.place-name {
+    font-size: 14px;
+    font-weight: bold;
+}
+
+.place-rating {
+    font-size: 14px;
+    float: right;
+}
+
+.place-rating:after {
+    content: " \\2605"
+}
+
+.reviews {
+    font-size: 12px;
+    max-height: 200px;
+    width: 400px;
+    overflow: auto;
+}
+
+.review-author {
+    font-weight: bold;
+}
+
+.review-text {
+    margin-bottom: 5px;
+    padding-left: 19px;
+}
+`);
+
+PALM.Places = function(options) {
+    Object.assign(this, options);
+
     this.limit = 1;
     this.delay = 250;
     this.drawBoxes = false;
     this.timer = null;
 
     this.running = 0;
-    this.places = new google.maps.places.PlacesService(map);
+    this.places = new google.maps.places.PlacesService(this.map);
     this.info = new google.maps.InfoWindow({});
     this.queue = [];
     this.markers = {};
     this.rectangles = [];
     
-    google.maps.event.addListener(map, 'bounds_changed', this.onBoundsChanged.bind(this));
+    google.maps.event.addListener(this.map, 'bounds_changed', this.onBoundsChanged.bind(this));
     this.updateLabels();
 };
 
@@ -66,7 +100,7 @@ PALM.Places.prototype = {
                     strokeColor: '#000000',
                     strokeOpacity: 0.6,
                     fillOpacity: 0.05,
-                    map: map,
+                    map: this.map,
                     zIndex: -1
                 }));
             });
@@ -163,10 +197,11 @@ PALM.Places.prototype = {
             var marker = new PALM.Marker({
                 position: place.geometry.location,
                 icon: 'icons/' + icon + '-small.png',
-                title: place.name + ' ' + (place.rating ? place.rating + '\u2605s' : '')
+                name: place.name,
+                rating: place.rating
             });
             google.maps.event.addListener(marker, 'click', this.showInfo.bind(this, marker, place));
-            marker.setMap(map);
+            marker.setMap(this.map);
             this.markers[place.placeId] = marker;
             this.fire('markeradded', place, marker);
         }
@@ -188,7 +223,7 @@ PALM.Places.prototype = {
             }
             
             timer = setTimeout(() => {
-                if (map.zoom >= 14) {
+                if (this.map.zoom >= 14) {
                     this.showMarkerLabels();
                 } else {
                     this.hideMarkerLabels();
@@ -198,7 +233,7 @@ PALM.Places.prototype = {
     }(),
     
     showMarkerLabels: function() {
-        var bounds = map.getBounds();
+        var bounds = this.map.getBounds();
         for (var placeId in this.markers) {
             var marker = this.markers[placeId];
             if (bounds.contains(marker.position)) {
@@ -241,7 +276,7 @@ PALM.Places.prototype = {
                 info.setContent(content + '</div>');
                 info.setPosition(marker.getPosition());
                 info.marker = marker;
-                info.open(map);
+                info.open(this.map);
             }
         });
     }

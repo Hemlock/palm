@@ -14,169 +14,6 @@
             font-family: Arial, Helvetica, sans-serif;
         }
 
-        #map-canvas {
-            position: absolute;
-            top: 0;
-            left: 0;
-            height: 100%;
-            width: 100%;
-            box-sizing: border-box;
-        }
-        
-        @media print {
-            #map-options {
-                display: none !important;
-            }
-        }
-
-        #map-options {
-            position: absolute;
-            left: 5px;
-            bottom: 30px;
-            z-index: 1;
-            background-color: white;
-            box-shadow: 0 0 3px #ddd;
-            border: 1px solid #eee;
-            padding: 3px;
-        }
-
-        #map-options label {
-            display: block;
-            font-size: 12px;
-        }
-        
-        .map-marker-label {
-            position: absolute;
-            color: white;
-            background-color: rgba(100,100,100,0.5);
-            padding: 2px;
-            display: inline-block;
-            width: 100px;
-            border-radius: 3px;
-        }
-        
-        .map-marker-label-left {
-            transform: translate(10px, calc(-50% - 17px))
-        }
-
-        .map-marker-label-right {
-            text-align: right;
-            transform: translate(calc(-100% - 10px), calc(-50% - 17px));
-        }
-
-        .map-marker-label-top {
-            text-align: center;
-            transform: translate(-50%, calc(-100% - 27px));
-        }
-
-        .map-marker-label-bottom {
-            text-align: center;
-            transform: translate(-50%, 1px);
-        }
-        
-        .map-marker-label-hidden {
-            display: none;
-        }
-        
-        .place-name {
-            font-size: 14px;
-            font-weight: bold;
-        }
-
-        .place-rating {
-            font-size: 14px;
-            float: right;
-        }
-
-        .place-rating:after {
-            content: " \2605"
-        }
-
-        .reviews {
-            font-size: 12px;
-            max-height: 200px;
-            width: 400px;
-            overflow: auto;
-        }
-
-        .review-author {
-            font-weight: bold;
-        }
-        .review-text {
-            margin-bottom: 5px;
-            padding-left: 19px;
-        }
-
-        #distance-marker {
-            position: absolute;
-            bottom: 0;
-            right: 0;
-            display: none;
-            z-index: 2;
-            width: 18px;
-            height: 18px;
-            background-color: #999;
-            color: white;
-            font-size: 12px;
-            border: 1px solid white;
-            padding: 4px 3px 0 2px;
-            text-align: center;
-            border-radius: 18px;
-            box-shadow: 0 0 10px #ddd;
-        }
-
-        #status {
-            display: none;
-            position: absolute;
-            bottom: 0;
-            right: 0;
-            border: 2px solid red;
-            padding: 5px;
-            background-color: white;
-            box-shadow: 0 0 3px #eee;
-            border: 1px solid #ddd;
-        }
-        
-        .weather-details {
-            width: 640px;
-            height: 320px;
-            display: flex;
-            flex-shrink: 0;
-            flex-wrap: wrap;
-        }
-        
-        .weather-details-hour {
-            width: 105px;
-            height: 64px;
-            position: relative;
-        }
-        
-        .weather-details-hour div {
-            position: absolute;
-            top: 50%;
-            left: 64px;
-            transform: translateY(-50%);
-        }
-        
-        .weather-details-hour div span {
-            display: block;
-            font-size: 9px;
-        }
-        
-        .weather-details-hour > img {
-        }
-
-        .map-places-list {
-            position: absolute;
-            top: 5px;
-            right: 5px;
-            bottom: 5px;
-            width: 200px;
-            background-color: white;
-            box-shadow: 0 0 3px #eee;
-            border: 1px solid #ddd;
-        }
-
     </style>
     <link rel="stylesheet" href="icons/icons.css" />
     <script type="text/javascript" src="https://maps.googleapis.com/maps/api/js?libraries=geometry,places,&sensor=false"></script>
@@ -200,49 +37,46 @@
     <script type="text/javascript" src="places.js"></script>
     <script type="text/javascript" src="list.js"></script>
     <script type="text/javascript" src="weather.js"></script>
+    <script type="text/javascript" src="status.js"></script>
+    <script type="text/javascript" src="layout.js"></script>
+    <script type="text/javascript" src="map.js"></script>
     <script type="text/javascript">
         
-        var map, places;
         function initialize() {
-            map = new google.maps.Map(document.getElementById("map-canvas"), {
-                mapTypeId: google.maps.MapTypeId.ROADMAP,
-                styles: [{
-                    featureType: 'poi',
-                    stylers: [{visibility: 'off'}]
-                }, {
-                    featureType: 'transit',
-                    elementType: 'labels.icon',
-                    stylers: [{visibility: 'off'}]
-                }]
-            });
+            var map = PALM.Map.initialize();
+            PALM.Routes.initialize({
+                    folder: '37',
+                    map: map
+                }, () => {
 
-            PALM.Routes.initialize('37', () => {
-                PALM.Options.initialize();
-            });
+                    let places = new PALM.Places({
+                        map: map
+                    });
 
-            places = new PALM.Places(map);
-            list = new PALM.List({
-                map: map,
-                places: places
-            });
+                    let list = new PALM.List({
+                        map: map,
+                        places: places
+                    });
 
-            var status = document.getElementById('status');
-            places.on('update', function() {
-                var count = places.running + places.queue.length
-                status.innerHTML = count + ' searches loading...';
-                status.style.display = count ? 'block' : 'none';
-            });
+                    PALM.Options.initialize({
+                        places: places,
+                        map: map
+                    });
 
-            var bikeLayer = new google.maps.BicyclingLayer();
-            bikeLayer.setMap(map);
+                    PALM.Status.initialize({
+                        places: places
+                    });
+
+                    PALM.Layout.initialize({
+                        map: map
+                    });
+                }
+            );
         }
         google.maps.event.addDomListener(window, 'load', initialize);
 
     </script>
 </head>
 <body>
-<div id="distance-marker">43</div>
-<div id="map-canvas"></div>
-<div id="status"></div>
 </body>
 </html>

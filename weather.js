@@ -1,3 +1,33 @@
+css(`
+.weather-details {
+    width: 640px;
+    height: 320px;
+    display: flex;
+    flex-shrink: 0;
+    flex-wrap: wrap;
+}
+
+.weather-details-hour {
+    width: 105px;
+    height: 64px;
+    position: relative;
+}
+
+.weather-details-hour div {
+    position: absolute;
+    top: 50%;
+    left: 64px;
+    transform: translateY(-50%);
+}
+
+.weather-details-hour div span {
+    display: block;
+    font-size: 9px;
+}
+
+.weather-details-hour > img {
+}
+`);
 PALM.Weather = function(map, date) {
     this.apiKey = '3a3d7e0d4a9f4430a3100756162007';
     this.map = map;

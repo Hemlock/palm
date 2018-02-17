@@ -1,5 +1,8 @@
 PALM.Marker = function(options) {
+
     google.maps.Marker.call(this, options);
+    this.title = this.name + ' ' + (this.rating ? this.rating + '\u2605s' : '')
+    this.rating = this.rating || '';
     PALM.Marker.instances.push(this);
 }
 PALM.Marker.instances = [];

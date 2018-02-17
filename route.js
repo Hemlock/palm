@@ -104,7 +104,9 @@ PALM.Route.prototype = {
 
     getDistanceMarker: function() {
         if (!this.distanceMarker) {
-            this.distanceMarker = document.getElementById('distance-marker')
+            this.distanceMarker = document.createElement('div');
+            this.distanceMarker.id = 'distance-marker';
+            document.body.appendChild(this.distanceMarker);
         }
         return this.distanceMarker;
     },

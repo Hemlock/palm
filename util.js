@@ -84,3 +84,21 @@ Date.diff = function() {
 Date.prototype.toISOShort = function() {
     return this.toISOString().substring(0,10);
 };
+
+function css(text) {
+    let style = document.createElement('style')
+    style.setAttribute('type', 'text/css');
+    style.appendChild(document.createTextNode(text))
+    document.getElementsByTagName('HEAD')[0].appendChild(style);
+}
+
+{
+    var div = document.createElement('div')
+    function html(html, parent) {
+        div.innerHTML = html;
+        var el = div.children[0];
+        (parent || document.body).appendChild(el);
+
+        return el;
+    }
+}

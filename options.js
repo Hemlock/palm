@@ -1,12 +1,29 @@
+css(`
+@media print {
+    #map-options {
+        display: none !important;
+    }
+}
+
+.map-options {
+    background-color: white;
+    padding: 8px;
+    box-shadow: 0 0 3px #aaa;
+}
+
+.map-options label {
+    display: block;
+    font-size: 12px;
+}
+`)
+
 PALM.Options = {
-    initialize: function() {
+    initialize: function(options) {
+        Object.assign(this, options);
         this.state = {};
         this.loadState();
 
-        this.container = document.createElement('div');
-        this.container.id = 'map-options';
-        document.body.appendChild(this.container);
-
+        this.el = html(`<div class="map-options"></div>`);
         this.buildDaySelector(); 
         this.buildTypeCheckboxes();
 
@@ -19,7 +36,6 @@ PALM.Options = {
         var def = { day: 0, folder: PALM.Routes.folder, checked: null };
         this.state = PALM.Storage.get('options', def);
         if (this.state instanceof Array) {
-            debugger
             this.state = def;
             this.saveState();
         }
@@ -30,7 +46,7 @@ PALM.Options = {
     },
 
     buildDaySelector: function() {
-        var doc = this.container.ownerDocument;
+        var doc = this.el.ownerDocument;
         this.daySelector = doc.createElement('select');
         PALM.RouteInfo.days.forEach((day, index) => {
             let option = doc.createElement('option');
@@ -40,7 +56,7 @@ PALM.Options = {
 
             this.daySelector.appendChild(option);
         });
-        this.container.appendChild(this.daySelector);
+        this.el.appendChild(this.daySelector);
         this.daySelector.addEventListener('change', ()=> {
             var day = this.daySelector.selectedIndex;
             this.state.day = day;
@@ -50,7 +66,7 @@ PALM.Options = {
     },
     
     buildTypeCheckboxes: function() {
-        var doc = this.container.ownerDocument;
+        var doc = this.el.ownerDocument;
         var checked = this.state.checked
          ? this.state.checked.map((name) => PALM.Types.byName[name]) 
          : PALM.Types.filter((type) => type.checked);
@@ -68,7 +84,7 @@ PALM.Options = {
             this.checkboxes.push(checkbox);
             label.appendChild(checkbox, 0);
             label.appendChild(doc.createTextNode(type.name));
-            this.container.appendChild(label);
+            this.el.appendChild(label);
         });
     },
 
@@ -84,6 +100,6 @@ PALM.Options = {
         this.saveState();
         
         let types = PALM.Types.filter((type) => ~names.indexOf(type.name));
-        places.search(types, PALM.Routes.current);    
+        this.places.search(types, PALM.Routes.current);    
     }
 };
