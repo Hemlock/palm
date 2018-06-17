@@ -67,43 +67,48 @@ PALM.MarkerLabel.prototype = Object.assign(new google.maps.OverlayView(), {
         this.timer = setTimeout(()=> {
             this.timer = null;
             var text = String(this.get('text'));
-            var position = this.getProjection().fromLatLngToDivPixel(this.get('position'));
-            this.span.innerHTML = text;
-            this.span.style.left = position.x + 'px';
-            this.span.style.top = position.y + 'px';
-            this.span.className = 'map-marker-label map-marker-label-left';
-            var bounds = this.map.getBounds();
-            var boxes = PALM.Marker.instances.reduce((memo, marker) => {
-                if (marker != this.marker && bounds.contains(marker.getPosition())) {
-                    memo.push(this.getMarkerBox(marker));
-                }
-                return memo;
-            }, []);
-
-            boxes = PALM.MarkerLabel.instances
-                .sort((a,b) => b.offsetLeft - a.offsetLeft)
-                .reduce((memo, label) => {
-                if (label !== this) {
-                    memo.push(label.getBox());
-                } 
-                return memo;
-                }, boxes);
-
-            if (this.overlaps(boxes)) {
-                this.span.classList.remove('map-marker-label-left');
-                this.span.classList.add('map-marker-label-right');
-                if (this.overlaps(boxes)) {
-                    this.span.classList.remove('map-marker-label-right');
-                    this.span.classList.add('map-marker-label-bottom');
-                //     if (this.overlaps(boxes)) {
-                //         this.span.classList.remove('map-marker-label-bottom');
-                //         this.span.classList.add('map-marker-label-top');
-                        if (this.overlaps(boxes)) {
-                            this.span.classList.remove('map-marker-label-top');
-                            this.span.classList.add('map-marker-label-hidden');
-                        }
+            var projection = this.getProjection();
+            if (projection) {
+                var position = this.getProjection().fromLatLngToDivPixel(this.get('position'));
+                this.span.innerHTML = text;
+                this.span.style.left = position.x + 'px';
+                this.span.style.top = position.y + 'px';
+                this.span.className = 'map-marker-label map-marker-label-left';
+                var bounds = this.map.getBounds();
+                var boxes = PALM.Marker.instances.reduce((memo, marker) => {
+                    if (marker != this.marker && bounds.contains(marker.getPosition())) {
+                        memo.push(this.getMarkerBox(marker));
                     }
-                // } 
+                    return memo;
+                }, []);
+
+                boxes = PALM.MarkerLabel.instances
+                    .sort((a,b) => b.offsetLeft - a.offsetLeft)
+                    .reduce((memo, label) => {
+                    if (label !== this) {
+                        memo.push(label.getBox());
+                    } 
+                    return memo;
+                    }, boxes);
+
+                if (this.overlaps(boxes)) {
+                    this.span.classList.remove('map-marker-label-left');
+                    this.span.classList.add('map-marker-label-right');
+                    if (this.overlaps(boxes)) {
+                        this.span.classList.remove('map-marker-label-right');
+                        this.span.classList.add('map-marker-label-bottom');
+                    //     if (this.overlaps(boxes)) {
+                    //         this.span.classList.remove('map-marker-label-bottom');
+                    //         this.span.classList.add('map-marker-label-top');
+                            if (this.overlaps(boxes)) {
+                                this.span.classList.remove('map-marker-label-top');
+                                this.span.classList.add('map-marker-label-hidden');
+                            }
+                        }
+                    // } 
+                }
+            } else {
+                console.log(text);
             }
         }, 50);
     },

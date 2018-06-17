@@ -43,8 +43,8 @@ PALM.Places = function(options) {
     this.info = new google.maps.InfoWindow({});
     this.queue = [];
     this.markers = {};
+    this.details = {};
     this.rectangles = [];
-    
     google.maps.event.addListener(this.map, 'bounds_changed', this.onBoundsChanged.bind(this));
     this.updateLabels();
 };
@@ -52,6 +52,26 @@ PALM.Places = function(options) {
 PALM.Places.prototype = {
     getColor: function(types) {
         return '#ff000';
+    },
+
+    getPlaceDetailsForMarker: function(marker, callback) {
+        let details = this.details[marker.placeId];
+        if (details) {
+            callback(details);
+        } else {
+            this.places.getDetails({ 
+                placeId: marker.placeId
+            }, (details, status) => {
+                if (status == google.maps.places.PlacesServiceStatus.OK) {
+                    this.details[marker.placeId] = details;
+                    callback(details);
+                }
+            });
+        }
+    },
+
+    getPlaceForMarker: function(marker) {
+        return this.results[marker.placeId];
     },
 
     search: function(types, route) {
@@ -184,6 +204,7 @@ PALM.Places.prototype = {
             this.fire('markerremoved', id, marker);
             marker.setMap(null);
         }
+        this.results = {};
         this.markers = {};
     },
     
@@ -198,12 +219,14 @@ PALM.Places.prototype = {
                 position: place.geometry.location,
                 icon: 'icons/' + icon + '-small.png',
                 name: place.name,
-                rating: place.rating
+                rating: place.rating,
+                placeId: place.placeId
             });
-            google.maps.event.addListener(marker, 'click', this.showInfo.bind(this, marker, place));
             marker.setMap(this.map);
+            this.results[place.placeId] = place;
             this.markers[place.placeId] = marker;
             this.fire('markeradded', place, marker);
+            google.maps.event.addListener(marker, 'click', this.showInfo.bind(this, marker, place));
         }
     },
 
@@ -259,28 +282,27 @@ PALM.Places.prototype = {
     },
 
     showInfo: function(marker,place) {
-        var info = this.info;
-        this.places.getDetails({placeId: place.placeId}, function(placeDetails, status) {
-            if (status == 'OK') {
-                var content = ((placeDetails.rating == undefined ? '' : '<span class="place-rating">{rating}</span>') +
-                    '<a class="place-name" target="_blank" href="{url}">{name}</a>' +
-                    '<div class="reviews">').format(placeDetails);
-                if (placeDetails.reviews) {
-                    placeDetails.reviews.forEach(function(review) {
-                        if (review.text) {
-                            content += ('<div class="review-author">{author_name}</div>' +
-                                '<div class="review-text">{text}</div>').format(review);
-                        }
-                    });
-                }
-                info.setContent(content + '</div>');
-                info.setPosition(marker.getPosition());
-                info.marker = marker;
-                info.open(this.map);
+        this.getPlaceDetailsForMarker(marker, function(placeDetails) {
+            var content = ((placeDetails.rating == undefined ? '' : '<span class="place-rating">{rating}</span>') +
+                '<a class="place-name" target="_blank" href="{url}">{name}</a>' +
+                '<div class="reviews">').format(placeDetails);
+            if (placeDetails.reviews) {
+                placeDetails.reviews.forEach(function(review) {
+                    if (review.text) {
+                        content += ('<div class="review-author">{author_name}</div>' +
+                            '<div class="review-text">{text}</div>').format(review);
+                    }
+                });
             }
-        });
-    }
 
+            var info = this.info;
+            info.setContent(content + '</div>');
+            info.setPosition(marker.getPosition());
+            info.marker = marker;
+            info.open(this.map);
+
+        }.bind(this));
+    }
 };
 
 PALM.Places.mixin(Observable);

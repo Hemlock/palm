@@ -55,6 +55,11 @@ css(`
 .map-list-row {
     display: table-row; 
     width: 100%;
+    cursor: pointer;
+}
+
+.map-list-row:hover {
+    background-color: #eee;
 }
 
 .map-list-row * {
@@ -63,7 +68,7 @@ css(`
     border-bottom: 1px solid #ddd;
 }
 
-.map-list-row span {
+.map-list-row span, .map-list-row a {
     padding: 3px;
 }
 
@@ -86,7 +91,9 @@ css(`
 PALM.List = function() {
     var $this = function(options) {
         this.updateTimer = null;
-        Object.assign(this, options);
+        this.collapsed = false;
+        this.currentMarker = null;
+        Object.assign(this, options, PALM.Storage.get('list'));
         this.el = html(`
             <div class="map-list">
                 <div class="map-list-table"></div>
@@ -102,24 +109,44 @@ PALM.List = function() {
         this.places.on('markeradded', this.onMarkerAdded, this);
         this.places.on('markerremoved', this.onMarkerRemoved, this);
 
+        this.table = this.el.querySelector('.map-list-table');
         this.list.addEventListener('mouseover', this.onMouseOver.bind(this));
-        this.list.addEventListener('mouseout', this.onMouseOut.bind(this));
-
+        this.table.addEventListener('mouseleave', this.onMouseLeave.bind(this));
+        this.list.addEventListener('click', this.onClick.bind(this));
+        
         google.maps.event.addListener(this.map, 'bounds_changed', this.onBoundsChanged.bind(this));
+
+        if (this.collapsed) {
+            this.el.classList.add('collapsed');
+        }
     }
 
     Object.assign($this.prototype, {
         onMouseOver: function(e) {
             var marker = this.getMarkerForEvent(e);
-            if (marker) {
+            if (this.currentMarker && marker != this.currentMarker) {
+                this.currentMarker.setAnimation(null);
+            }
+
+            if (marker && marker != this.currentMarker) {
+                this.currentMarker = marker;
                 marker.setAnimation(google.maps.Animation.BOUNCE);
             }
         },
 
-        onMouseOut: function(e) {
-            var marker = this.getMarkerForEvent(e);
-            if (marker) {
-                marker.setAnimation(null);
+        onMouseLeave: function(e) {
+            if (this.currentMarker) {
+                this.currentMarker.setAnimation(null);
+                this.currentMarker = null;
+            }
+        },
+
+        onClick: function(e) {
+            if (this.currentMarker) {
+                let win = window.open(null, this.currentMarker.placeId);
+                this.places.getPlaceDetailsForMarker(this.currentMarker, (details) => {
+                    win.location.href = details.url;
+                });
             }
         },
 
@@ -140,7 +167,11 @@ PALM.List = function() {
         },
 
         onHeaderClick: function() {
+            this.collapsed = !this.collapsed;
             this.el.classList.toggle('collapsed');
+            PALM.Storage.set('list', { 
+                collapsed: this.collapsed
+            })
         },
 
         onMarkerAdded: function(place, marker) {
@@ -175,7 +206,7 @@ PALM.List = function() {
                 
                 this.updateTimer = null;
                 var html = markers.map((marker) => {
-                    var index = this.markers.indexOf(marker);
+                    let index = this.markers.indexOf(marker);
                     return `<div class="map-list-row" index="${index}">
                         <img src="${marker.icon}" />
                         <span>${marker.rating}</span>

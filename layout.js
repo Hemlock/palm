@@ -17,21 +17,22 @@ css(`
 
 `);
 
-PALM.Layout = {
-    initialize: function(options) {
-        Object.assign(this, options);
-        this.listEl = document.querySelector('.map-list');
-        this.optionsEl = document.querySelector('.map-options');
-        this.map.controls[google.maps.ControlPosition.RIGHT_TOP]
-            .push(this.listEl);
-        this.map.controls[google.maps.ControlPosition.LEFT_BOTTOM]
-            .push(this.optionsEl);
+PALM.Layout = function(options) {
+    Object.assign(this, options);
+    this.listEl = document.querySelector('.map-list');
+    this.optionsEl = document.querySelector('.map-options');
+    this.map.controls[google.maps.ControlPosition.RIGHT_TOP]
+        .push(this.listEl);
+    this.map.controls[google.maps.ControlPosition.LEFT_BOTTOM]
+        .push(this.optionsEl);
 
-        window.addEventListener('resize', this.onResize.bind(this));
-        this.onResize();
-    },
+    window.addEventListener('resize', this.onResize.bind(this));
+    this.onResize();
+};
 
+
+PALM.Layout.prototype = {
     onResize: function() {
         this.listEl.style.height = (this.map.getDiv().offsetHeight) + 'px'
     }
-}
+};

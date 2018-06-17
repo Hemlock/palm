@@ -12,17 +12,15 @@ css(`
 }
 `);
 
-PALM.Status = {
-    initialize: function(options) {
-        Object.assign(this, options);
-        this.el  = document.createElement('div')
-        this.el.className = 'status';
-        document.body.appendChild(this.el);
-        
-        this.places.on('update', () => {
-            var count = this.places.running + this.places.queue.length
-            this.el.innerHTML = count + ' searches loading...';
-            this.el.style.display = count ? 'block' : 'none';
-        });
-    }
+PALM.Status = function(options) {
+    Object.assign(this, options);
+    this.el  = document.createElement('div')
+    this.el.className = 'status';
+    document.body.appendChild(this.el);
+    
+    this.places.on('update', () => {
+        var count = this.places.running + this.places.queue.length
+        this.el.innerHTML = count + ' searches loading...';
+        this.el.style.display = count ? 'block' : 'none';
+    });
 };

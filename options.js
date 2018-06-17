@@ -17,21 +17,21 @@ css(`
 }
 `)
 
-PALM.Options = {
-    initialize: function(options) {
-        Object.assign(this, options);
-        this.state = {};
-        this.loadState();
+PALM.Options = function(options) {
+    Object.assign(this, options);
+    this.state = {};
+    this.loadState();
 
-        this.el = html(`<div class="map-options"></div>`);
-        this.buildDaySelector(); 
-        this.buildTypeCheckboxes();
+    this.el = html(`<div class="map-options"></div>`);
+    this.buildDaySelector(); 
+    this.buildTypeCheckboxes();
 
-        var day = this.state.folder == PALM.Routes.folder ? this.state.day : 0;
-        Object.assign(this.state, { day: day, folder: PALM.Routes.folder });
-        PALM.Routes.load(day, this.updatePlaces, this);
-    },
+    var day = this.state.folder == PALM.Routes.folder ? this.state.day : 0;
+    Object.assign(this.state, { day: day, folder: PALM.Routes.folder });
+    this.routes.load(day, this.updatePlaces, this);
+};
 
+PALM.Options.prototype = {
     loadState: function() {
         var def = { day: 0, folder: PALM.Routes.folder, checked: null };
         this.state = PALM.Storage.get('options', def);
@@ -60,7 +60,7 @@ PALM.Options = {
         this.daySelector.addEventListener('change', ()=> {
             var day = this.daySelector.selectedIndex;
             this.state.day = day;
-            PALM.Routes.load(day, this.updatePlaces, this);
+            this.routes.load(day, this.updatePlaces, this);
             this.saveState();
         });
     },
@@ -100,6 +100,6 @@ PALM.Options = {
         this.saveState();
         
         let types = PALM.Types.filter((type) => ~names.indexOf(type.name));
-        this.places.search(types, PALM.Routes.current);    
+        this.places.search(types, this.routes.current);    
     }
 };

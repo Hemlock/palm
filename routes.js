@@ -19,22 +19,22 @@ css(`
 }
 `);
 
-PALM.Routes = {
-    initialize: function(options, callback, scope) {
-        Object.assign(this, options);
-        var head = document.getElementsByTagName('head')[0];
-        var script = document.createElement('script');
-        script.setAttribute('src', this.folder + '/info.js');
-        script.setAttribute('type', 'text/javascript');
-        head.appendChild(script);
-        script.addEventListener('load', ()=> {
-            if (callback) {
-                callback.call(scope);
-            }
-        });
-    },
+PALM.Routes = function(options, callback, scope) {
+    this.current = null;
+    Object.assign(this, options);
+    var head = document.getElementsByTagName('head')[0];
+    var script = document.createElement('script');
+    script.setAttribute('src', this.folder + '/info.js');
+    script.setAttribute('type', 'text/javascript');
+    head.appendChild(script);
+    script.addEventListener('load', ()=> {
+        if (callback) {
+            callback.call(scope);
+        }
+    });
+};
 
-    current: null,
+PALM.Routes.prototype = {
     load: function(index, onLoad, scope) {
         if (this.current) {
             this.current.destroy();
@@ -45,4 +45,4 @@ PALM.Routes = {
         this.current = new PALM.Route(this.map, file, day[1], Date.addDays(PALM.RouteInfo.startDate, day[2] || index));
         this.current.load(onLoad, scope);
     }
-}
+};

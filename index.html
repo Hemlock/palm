@@ -34,6 +34,7 @@
     <script type="text/javascript" src="boxer.js"></script>
     <script type="text/javascript" src="search.js"></script>
     <script type="text/javascript" src="place.js"></script>
+    <script type="text/javascript" src="queue.js"></script>
     <script type="text/javascript" src="places.js"></script>
     <script type="text/javascript" src="list.js"></script>
     <script type="text/javascript" src="weather.js"></script>
@@ -43,12 +44,11 @@
     <script type="text/javascript">
         
         function initialize() {
-            var map = PALM.Map.initialize();
-            PALM.Routes.initialize({
+            var map = new PALM.Map({});
+            var routes = new PALM.Routes({
                     folder: '37',
                     map: map
                 }, () => {
-
                     let places = new PALM.Places({
                         map: map
                     });
@@ -58,16 +58,17 @@
                         places: places
                     });
 
-                    PALM.Options.initialize({
+                    let options = new PALM.Options({
                         places: places,
+                        routes: routes,
                         map: map
                     });
 
-                    PALM.Status.initialize({
+                    let status = new PALM.Status({
                         places: places
                     });
 
-                    PALM.Layout.initialize({
+                    let layout = new PALM.Layout({
                         map: map
                     });
                 }
