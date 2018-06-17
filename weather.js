@@ -1,32 +1,10 @@
 css(`
 .weather-details {
-    width: 640px;
-    height: 320px;
-    display: flex;
-    flex-shrink: 0;
-    flex-wrap: wrap;
+    text-align: center;
+    width: 200px;
+    height: 150px;
 }
 
-.weather-details-hour {
-    width: 105px;
-    height: 64px;
-    position: relative;
-}
-
-.weather-details-hour div {
-    position: absolute;
-    top: 50%;
-    left: 64px;
-    transform: translateY(-50%);
-}
-
-.weather-details-hour div span {
-    display: block;
-    font-size: 9px;
-}
-
-.weather-details-hour > img {
-}
 `);
 PALM.Weather = function(map, date) {
     this.apiKey = '3a3d7e0d4a9f4430a3100756162007';
@@ -79,26 +57,18 @@ PALM.Weather.prototype = {
     },
     
     showInfo: function(marker, forecast) {
+        var day = forecast.day;
         var content = '<div class="weather-details">'
-        //<div class="weather-details-title">Details for ' + forecast.date + '</div>';
-        
-        forecast.hour.forEach(function(hour) {
-            var time = new Date(Date.parse(hour.time)).getHours();
-            content += ('<div class="weather-details-hour">' + 
-                        '<img src="'+ hour.condition.icon + '" title="' + hour.condition.text + '"/>' +
-                        '<div>' + 
-                            '<span>' + PALM.Weather.TIMES[time] + '</span>' +
-                            '<span title="feels like">' + hour.feelslike_f + '&deg;</span>' +
-                            '<span title="actual">(' + hour.temp_f + '&deg;)</span>' +
-                            '<span title="humidity">' + hour.humidity + '%</span>' +
-                        '</div></div>');
-        });
+        content += '<h3>' + day.condition.text + '</h3>';
+        content += '<img src="http:' + day.condition.icon + '" />';
+        content += '<div>Min: ' + day.mintemp_f + '</div>';
+        content += '<div>Max: ' + day.maxtemp_f + '</div>';
         content += '</div>';
         
         var info = this.info;
         info.setContent(content);
         info.setPosition(marker.getPosition());
-        info.open(map);
+        info.open(this.map);
     },
     
     destroy: function() {
